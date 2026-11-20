@@ -1,0 +1,50 @@
+% Preamble for the New In ML 2026 camera-ready paper.
+% This is camera-ready mode. The final option removes anonymity and line numbers, and the
+% workshop option sets the footer to the workshop name.
+\usepackage[dblblindworkshop,final]{neurips_2026}
+\workshoptitle{New In ML}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}   % Needed by the checklist answer macros.
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{observation}[theorem]{Observation}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\opt}{\mathrm{OPT}}
+\newcommand{\repair}{\mathcal{R}}
+\newcommand{\dfeas}{\mathcal{D}}
+\newcommand{\std}[1]{{\scriptstyle\,\pm#1}}
+
+% Author-supplied content that is still missing prints in red.
+\newcommand{\authortodo}[1]{\textcolor{red}{[#1]}}
+% Code repository and its licence.
+\newcommand{\coderepo}{\url{https://github.com/dananghel/feasibility-repairs}}
+\newcommand{\codelicence}{MIT}
+
+\title{Not All Feasibility Repairs Are Equal:\\
+Non-Expansive Retractions for Warm-Started Solvers}
+
+\author{%
+  Dan Anghel\\
+  Department of Computing Sciences\\
+  Bocconi University\\
+  \texttt{dan.anghel@studbocconi.it}
+}

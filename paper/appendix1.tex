@@ -1,0 +1,1185 @@
+% Appendices A to D of the New In ML 2026 camera-ready paper.
+
+\section{Proofs and positioning for \texorpdfstring{Section~\ref{sec:nonexp}}{Section 3}}\label{app:early}
+
+\paragraph{Integral minimisers suffice.} On bipartite systems, $\ell_0$ and $\ell_1$ distances to
+the optimal face may be computed over its integral points (Section~\ref{sec:prelim}, footnote), and
+the small-instance figures of this paper are computed that way. The face may contain non-integral
+points, but none is ever strictly closer. Let $y$ be integral, let $f$ minimise the Hamming distance
+to $y$ over the optimal face $F$, and let $S$ be the coordinates where they agree. Substituting
+$y_S$ into the covering system leaves a system on the remaining coordinates. Its matrix is a
+submatrix of a bipartite incidence matrix, hence totally unimodular, and its right-hand side is
+integral. So $\{z : z \ge 0,\ z_i + z_j \ge w_{ij},\ z_S = y_S\}$ is an integral polyhedron, and
+so is its optimal face for the integral objective $\sum_i z_i$, which is nonempty (it contains $f$)
+and has value $\opt$. Any integral point of that face agrees with $y$ on all of $S$, so it is an
+integral minimiser. For $\ell_1$ the substitution is not needed. Fix a sign pattern
+$I \subseteq V$. On the region $\{z : z_i \ge y_i\ (i \in I),\ z_i \le y_i\ (i \notin I)\}$ the
+objective $\|y - z\|_1$ is linear, and the region intersected with the covering system is again a
+totally unimodular system with integral right-hand side. Its optimal face for $\sum_i z_i$ is $F$
+intersected with the region, and it is integral. So every region that meets $F$ contains an
+integral $\ell_1$-minimiser, and hence so does $F$. For $\ell_\infty$ and $\ell_\infty^\pm$ this
+reduction does not apply, and there we minimise over the full face directly, fractional points
+included.
+
+\begin{proof}[Proof of Corollary~\ref{cor:lip}]
+Clamping is componentwise $1$-Lipschitz, so assume $x, x' \ge 0$, and run the two scans in
+lockstep. At a constraint $(i,j)$ there are three cases. If neither iterate fires, nothing changes.
+If both fire, each maps $(z_i, z_j) \mapsto (w_{ij} - z_j,\, w_{ij} - z_i)$, so on those two
+coordinates the difference of the two iterates is swapped and negated. That is a signed
+permutation, hence an isometry of every $\ell_p$. If exactly one fires, say the iterate $z$ while
+$z'$ does not, then $z'_i + z'_j \ge w_{ij}$. This is the only property of $y$ used in the proof of
+Theorem~\ref{thm:nonexp}, so that proof applies verbatim with $y := z'$. Composing over the scan
+gives the claim.
+\end{proof}
+
+Theorem~\ref{thm:nonexp} is the case $x' = y$ feasible, where $\repair_\sigma(y) = y$. We state it
+separately because the runtime bounds compose with this form.
+
+In Corollary~\ref{cor:dinitz}, Algorithm~1 of \citeauthor{dinitz2021} is their repair (a one-sided
+walk), not \citeauthor{chen2022}'s solver of the same name.
+
+\begin{proof}[Proof of Corollary~\ref{cor:dinitz}]
+The inequality inside the proof of their Lemma~12 bounds the iteration count by $g(\hat{y}')$ for
+any feasible integer dual $\hat{y}'$, in particular for the one their Algorithm~1 produces. (Their
+Lemma~12 then weakens $g(\hat{y}')$ to $\|\hat{y}' - y^*\|_1$; we skip that step.) Their Lemma~6
+bounds that algorithm's total movement by twice the minimum feasible correction, and
+$\delta = (\hat{y}-y^*)^+$ is feasible for the correction problem: since $y^*$ is feasible,
+$\hat{y}_i + \hat{y}_j - c_{ij} \le (\hat{y}_i - y^*_i) + (\hat{y}_j - y^*_j) \le
+\delta_i + \delta_j$. Hence the movement is at most $2\|(\hat{y}-y^*)^+\|_1$, so
+$\sum_i \hat{y}'_i \ge \sum_i \hat{y}_i - 2\|(\hat{y}-y^*)^+\|_1$ and
+\[
+g(\hat{y}') = \sum_i y^*_i - \sum_i \hat{y}'_i
+\;\le\; \|(y^*-\hat{y})^+\|_1 + \|(\hat{y}-y^*)^+\|_1 = \|\hat{y} - y^*\|_1 .
+\]
+Alternatively, replacing their repair by the packing mirror of Definition~\ref{def:greedy} gives the
+same bound directly from Theorem~\ref{thm:pack}.
+\end{proof}
+
+\begin{remark}
+\citeauthor{dinitz2021}'s Theorem~7 bounds the post-repair $\ell_1$ distance and
+Corollary~\ref{cor:gap} the post-repair gap, so the two meet only in the end-to-end bound, which is
+where Corollary~\ref{cor:dinitz} compares them.
+\end{remark}
+
+\paragraph{Relation to known results.}
+(i) Relaxation and reflection methods give the $\ell_2$ case of Theorem~\ref{thm:nonexp} (Section~\ref{sec:nonexp}).
+(ii) Order-preserving operators and (iii) tropical projection do not apply. (iv) Isotonic
+regression is the closest precedent.
+
+\emph{(ii) Order-preserving operators.} \citet{crandall1980} show that on a domain closed under
+componentwise maximum a sum-preserving operator is order preserving if and only if it is
+$\ell_1$-non-expansive. This does not apply: $\repair_\sigma$ is not sum-preserving (it strictly
+increases $\sum_i y_i$ on every infeasible input), and it is not order preserving.
+
+\emph{(iii) Tropical projection.} The residuated projector $P(y) = \max\{v \in V : v \le y\}$ onto a
+max-plus semimodule~\citep{cohen2004} is a classical sup-norm
+non-expansion~\citep[Prop.~2]{crandall1980}. The $\ell_1$ analogue fails: on the max-plus line
+$V = \{(t,t,t)\} \subset \R^3$, $P(y) = (\min_i y_i)\mathbf{1}$ has $\ell_\infty$ Lipschitz
+constant $1$ but $\ell_1$ constant $3 = n$ (take $y = (0,1,1)$, $z = (1,1,1)$). In our setting no
+exact residuated projector exists, since the packing set is not max-closed, and its natural
+analogue (Proposition~\ref{prop:fail}(a)) is not non-expansive either.
+
+\emph{(iv) Isotonic regression.} \citet{yang2019} prove that the $\ell_2$ isotonic projection onto
+the monotone cone $\{x_1 \le \dots \le x_n\}$ is non-expansive in every permutation-invariant norm,
+by averaging a point with its image under an adjacent transposition. The same averaging reaches
+$\dfeas$. Its constraint normals are $e_i + e_j$ and
+$e_i$, so on each piece of the exact $\ell_2$ projection onto $\dfeas$ the linear part is an
+average of signed permutation matrices, and that projection is $1$-Lipschitz in every $\ell_p$ as
+well. The metric property therefore does not single out $\repair_\sigma$; what distinguishes it is
+that it has the property while being local, integral, one-pass and linear-time, and that its step,
+the full residual, is the largest common step that keeps it (Appendix~\ref{app:delicate}).
+
+\paragraph{A name collision.} \citet{kumabe2025} study ``Lipschitz continuous algorithms for
+covering problems'', including vertex cover. Their Lipschitz constant perturbs the input weights
+and measures earth-mover distance between output distributions. In that framework no deterministic
+algorithm is Lipschitz for most problems they consider, and their lower bound is $\Omega(|V|)$ for
+exact vertex-cover algorithms. Our constant perturbs the starting point and measures how far a
+single deterministic output moves, so their statements and ours are unrelated.
+
+\paragraph{The twisted lattice.} Proposition~\ref{prop:lattice} rules out one possible explanation
+of the operator map (Table~\ref{tab:zoo}, Appendix~\ref{app:delicate}): that the covering direction
+has no canonical repair because $\dfeas$ is not a lattice. It is a lattice under the twisted order,
+so the discrete-convex-analysis machinery of \citet{sakaue2022,sakaue2023} formally applies to it.
+The twist works only in the bipartite case: the flip $z_b = -y_b$ is a proper $2$-colouring of the
+constraint graph. For a non-bipartite covering system (weighted vertex cover on a graph with an odd
+cycle) no sign flip of this kind exists, and the $L^\natural$-convex route is not available.
+Theorem~\ref{thm:nonexp} does not need bipartiteness.
+
+\begin{proposition}[The feasible set is a twisted lattice]\label{prop:lattice}
+$\dfeas$ is not closed under the componentwise minimum. It \emph{is} closed under the twisted
+operations $(\max$ on $A$, $\min$ on $B)$ and $(\min$ on $A$, $\max$ on $B)$; equivalently, the
+isometry $z_b := -y_b$ turns $\dfeas$ into a box intersected with a difference-constraint system,
+which is an $L^\natural$-convex (alcoved) polyhedron.
+\end{proposition}
+\begin{proof}
+For the failure, a single constraint with $w = 10$ and the points $(10,0)$, $(0,10)$: their minimum
+$(0,0)$ violates $y_1 + y_2 \ge 10$. For the twisted closure, take the operation $(\max$ on $A$, $\min$ on $B)$ and any constraint
+$(a,b)$. Without loss of generality $\min(v_b, v'_b) = v_b$, and then
+$\max(u_a,u'_a) + \min(v_b,v'_b) \ge u_a + v_b \ge w_{ab}$. The operation
+$(\min$ on $A$, $\max$ on $B)$ is symmetric. Under $z_b = -y_b$ these are the two lattice
+operations of the difference-constraint system $y_a - z_b \ge w_{ab}$.
+\end{proof}
+
+\section{Non-expansion is fragile: proofs and the full operator map}\label{app:delicate}
+
+\begin{proof}[Proof of Proposition~\ref{prop:fail}]
+For (a), a small explicit witness on a $2\times2$ packing instance is
+$c = \left(\begin{smallmatrix}1&3\\5&0\end{smallmatrix}\right)$,
+$\hat{y} = (-1, 6 \mid -1, 3)$, $y = (-3, 2 \mid -3, -3)$. The repair drives the second left coordinate
+from $6$ down to $-3$, past $y$'s value of $2$, and the $\ell_1$ distance to $y$ rises from $14$ to
+$15$.
+
+For the unbounded constant, take all capacities zero and the feasible point $y = 0$. For (a), take
+a $k \times 2$ instance with $\hat y = (\mathbf{0} \mid 1, 0)$. The $A$-pass lowers every $u_a$ to
+$\min_b(0 - v_b) = -1$, and the $B$-pass then leaves $v$ alone, so the output is
+$(-\mathbf{1} \mid 1, 0)$ at $\ell_1$ distance $k+1$ from $y$, against $\|\hat y - y\|_1 = 1$. For (b),
+take the $k \times 1$ analogue $\hat y = (\mathbf{0} \mid 1)$. Every constraint has excess $1$, and the
+integral split puts all of it on the $A$-side ($\lceil 1/2 \rceil = 1$,
+$\lfloor 1/2 \rfloor = 0$), so each $u_a$ falls to $-1$ while $v$ never moves: again distance $k+1$
+against $1$. Both outputs are feasible, and $|V| = k+2$ and $k+1$ respectively.
+\end{proof}
+
+Operator (a) is the order-theoretic way to project down to feasibility, the analogue of the
+residuated projector of tropical algebra. In the packing direction, however, maximal feasible
+points below $\hat{y}$ need not be unique, because the feasible set is not closed under
+componentwise maximum (single constraint $y_1 + y_2 \le 0$, $\hat{y} = (1,1)$: both $(1,-1)$ and
+$(-1,1)$ are maximal). So every projection of this kind implicitly fixes an order of sides. (The
+Euclidean projection onto the same set is non-expansive in every $\ell_p$, since its normals are
+$-(e_a + e_b)$, but it is a global quadratic program with non-integral output; see
+Appendix~\ref{app:early}, item (iv).)
+
+Operator (b) splits the excess as evenly as integrality allows. It fails too, because that split is
+uneven. In the covering notation of Theorem~\ref{thm:nonexp}, raising both endpoints by $r/2$ is a
+non-expansion in every $\ell_p$: the worst case $s_j = r - s_i$ contributes
+$2\,|s_i - r/2|^p - |s_i|^p - |s_i - r|^p \le 0$ by midpoint convexity of $|t|^p$. But that step
+is not integral. A common integral step keeps both properties. Any common step $h$
+with $r/2 \le h \le r$ (for integral data this includes $\lceil r/2 \rceil$) is non-expansive in
+every $\ell_p$ and satisfies the constraint it fires. The full residual is the largest such step.
+Since $2h \ge r$, the step restores the fired constraint, and since coordinates only increase, one
+pass suffices. With $h$ in place of $r$ in $f$, which is still non-increasing, the worst case
+$s_j = r - s_i$ contributes $|s_i - h|^p + |s_i - r + h|^p - |s_i|^p - |s_i - r|^p \le 0$ by
+convexity, because the two new points lie between the two old ones and have the same sum. A step
+$h > r$ expands: on $y_1 + y_2 \ge r$ from $0$, it increases the distance to
+$\tfrac{r}{2}(e_1 + e_2)$.
+
+\paragraph{Local and global operators.} By Proposition~\ref{prop:lattice} (Appendix~\ref{app:early}),
+lattice structure does not explain the operator map. The relevant distinction
+is between \emph{local} and \emph{global} operators. \citeauthor{sakaue2022} define their
+repair as an $\ell_\infty^{\pm}$-projection, that is, as an $\arg\min$, which need not be unique. As
+representative they exhibit a \emph{uniform shift} of all $n$ coordinates ($+\varepsilon/2$ on one
+side, $-\varepsilon/2$ on the other, in their orientation $s_i - t_j \ge w_{ij}$). That
+representative has $\ell_1$ displacement $\Theta(n\varepsilon)$ and is not $\ell_1$-non-expansive.
+But the $\arg\min$ also contains sparse minimisers, so $\ell_\infty^\pm$-optimality does not force
+the large $\ell_1$ displacement. The repair of Definition~\ref{def:greedy}
+is local: it touches only the endpoints of violated constraints, and Corollary~\ref{cor:lip} shows
+that it is $1$-Lipschitz in every $\ell_p$ at once.
+
+We transplant the $\ell_\infty^\pm$-projection to the covering orientation.
+(i) \citet[Lemma~2]{sakaue2022} exhibit the uniform shift as one $\ell_\infty^\pm$-projection for
+the difference orientation. (ii) Their rounding is to the nearest integer with $0.5$ rounded down,
+which preserves feasibility in their orientation but not in ours: for an integral clamped
+prediction it fails at every odd $\varepsilon$, because both endpoints of a maximally violated
+constraint round down and give back the last unit of slack. We round up instead (our choice). (iii) Their runtime bounds
+are parameterised by an $\ell_\infty$-type distance from the prediction
+($O(T_{\mathrm{loc}}\|p^*-\hat p\|_\infty)$ in \citet[Thm.~1(2)]{sakaue2022},
+$\widetilde O(T_{\mathrm{loc}}\,\bar\mu(\hat p;g))$ in \citet[Thm.~1(ii)]{sakaue2023}), and their
+solver is a steepest descent whose iteration count is bounded by that same distance. Both papers
+also cap the worst case by running a standard algorithm in parallel. (iv) The two-sided norm is
+evaluated in covering coordinates; in the difference coordinates of \citet{sakaue2022} the face
+point is itself $\ell_\infty^\pm$-optimal on the family of Observation~\ref{obs:shift}, so the
+forcing claim below is stated for the plain sup norm $\|\cdot\|_\infty$.
+Observation~\ref{obs:shift} shows a property of the norm: a repair can be optimal
+in $\ell_\infty$ and still wrong in every coordinate, so an $\ell_\infty$ guarantee is of no use
+to a bound stated in $\ell_0$.
+
+\begin{lemma}[Agreement with the optimal face is limited by $\opt$]\label{lem:budget}
+Let $z \in \R^V_{\ge 0}$ and put $s = \min_{i \in V} z_i$. If $s > 0$, then the $\ell_0$
+distance from $z$ to the full optimal face is at least $|V| - \lfloor \opt / s \rfloor$.
+\end{lemma}
+\begin{proof}
+Fix an optimal $y$ and let $S = \{ i : z_i = y_i \}$. Every optimal $y$ has $y \ge 0$ and
+$\sum_{i} y_i = \opt$, so $\sum_{i \in S} z_i = \sum_{i \in S} y_i \le \opt$. Each summand on the
+left is at least $s$, so $s\,|S| \le \opt$.
+\end{proof}
+
+\begin{observation}[An $\ell_\infty$-optimal repair can be wrong in every coordinate]\label{obs:shift}
+Transplant the $\ell_\infty^\pm$-projection to the covering orientation: if the clamped
+prediction's largest violation is $\varepsilon > 0$, raise every coordinate by $\varepsilon/2$ and
+round up. The output $z$ has $z_i \ge \lceil \varepsilon/2 \rceil \ge 1$ everywhere, so by
+Lemma~\ref{lem:budget} its $\ell_0$ distance to the optimal face is at least
+$(|A|+|B|) - \lfloor \opt / \lceil \varepsilon/2 \rceil \rfloor$. On the following family the
+output is wrong in every coordinate. For $d \ge 2$ and $W \ge 2$ take $|A| = 1$, $|B| = d$ and
+$w_{ab} = W$ for every $b$. The optimal face is the single point $(W \mid 0, \dots, 0)$; the prediction
+$\hat y = 0$ lies at $\ell_0$ distance $1$ from it; and the repair outputs
+$\lceil W/2 \rceil \mathbf{1}$, which differs from it in all $|A| + |B|$ coordinates. Taking $k$ disjoint such stars keeps the face a single point, keeps the post-repair
+face distance at $|A| + |B|$, and leaves the prediction's own at $|A|$. On this family the
+$\ell_0$ error is forced by the norm, whatever the representative:
+\emph{every} feasible integral $z$ attaining $\min \|z - \hat y\|_\infty$ (equal here to the
+covering-coordinate $\|z - \hat y\|_\infty^\pm$, since $z \ge \hat y$) differs from the
+optimal face in all $|A| + |B|$ coordinates.
+\end{observation}
+\begin{proof}
+For one star, let $y$ be feasible and $t = y_a$. If $t \ge W$ then $\sum_i y_i \ge t \ge W$, with
+equality only at $t = W$ and $y \equiv 0$ on $B$. If $t < W$ then $y_b \ge W - t > 0$ for all $d$
+coordinates of $B$, so $\sum_i y_i \ge t + d(W-t) = dW - (d-1)t > W$ using $t < W$ and $d \ge 2$.
+Hence $\opt = W$, attained only at $(W \mid 0,\dots,0)$. The prediction $\hat y = 0$ agrees with it on
+all of $B$, so its face distance is $1$; the largest violation is $\varepsilon = W$; the output
+is $\lceil W/2 \rceil \mathbf{1}$, and $\lceil W/2 \rceil \notin \{0, W\}$ because $W \ge 2$. For
+$k$ disjoint stars the cross constraints have weight $0$ and are implied by $y \ge 0$, so the
+instance decouples and the face is the product of the per-star faces.
+
+For the last claim, $z \ge 0 = \hat y$ gives $\|z - \hat y\|_\infty = \max_i z_i$, and
+feasibility with integrality gives $\max(z_a, z_b) \ge \lceil W/2 \rceil$ for each $b$; the uniform
+shift attains $\lceil W/2 \rceil$, so that is the minimum. Any $z$ attaining it has
+$z_a \le \lceil W/2 \rceil < W$ and therefore $z_b \ge W - \lceil W/2 \rceil = \lfloor W/2 \rfloor
+\ge 1$ for every $b$, both strict inequalities using $W \ge 2$. So $z$ agrees with
+$(W \mid 0,\dots,0)$ nowhere.
+\end{proof}
+
+The transplant keeps the $\ell_\infty$-optimality. A constraint violated by $\varepsilon$
+forces some endpoint to move by at least $\varepsilon/2$ in any feasible repair, hence by at least
+$\lceil\varepsilon/2\rceil$ in any integral repair, the kind the downstream bounds are stated for.
+The uniform shift realises displacement $\lceil\varepsilon/2\rceil$, so it is optimal in the norm
+its guarantee is stated in.
+
+Lemma~\ref{lem:budget}, however, is vacuous once $\opt \gg |V|\lceil\varepsilon/2\rceil$, which is the
+regime of the random instances of Section~\ref{sec:exp} and Appendix~\ref{app:experiments}. The
+family is also an extreme case: on those random instances, $\ell_\infty$-optimality does not force
+an error in every coordinate. The \emph{endpoint shift} raises only the endpoints of violated constraints by
+$\varepsilon/2$ and rounds up. It is also $\ell_\infty$-optimal, with the same $\ell_\infty$
+displacement as the uniform shift on all $120$ draws, yet it incurs only $0.34$ to $0.76$ of the
+uniform shift's post-repair $\ell_0$ error in every cell. Section~\ref{sec:exp} shows that the
+uniform shift is also costly for the solver: warm-starting through it can take several times as many
+dual adjustments as the row-reduction start.
+
+\paragraph{The full operator map.} Table~\ref{tab:zoo} collects what is known about every repair in
+this paper.
+
+\makeatletter\setlength{\@fptop}{0pt}\makeatother
+\begin{table}[!htbp]
+\centering
+\caption{What each repair guarantees in $\ell_1$ and in $\ell_0$; ``$?$'' marks an open cell. The
+walk and uniform-shift rows are our covering transplants of operators of \citet{dinitz2021} and
+\citet{sakaue2022,sakaue2023}; the rounding up is ours, and the entries of these rows are our analysis.
+Lower-bound and tightness entries are proved on covering instances. In the packing setting we claim
+only the factor-$2$ upper bound of Theorem~\ref{thm:composed} and the balanced lower bound of
+Theorem~\ref{thm:balancedlb}.}
+\label{tab:zoo}
+\footnotesize
+\setlength{\tabcolsep}{4pt}\begin{tabular}{@{}p{2.8cm} p{3.8cm} p{6.6cm}@{}}
+\toprule
+Repair & $\ell_1$ & $\ell_0$ face distance\\
+\midrule
+\raggedright Greedy two-sided, full residual & \raggedright non-expansive in every $\ell_p$ & \raggedright no additive constant under any order (Thm.~\ref{thm:noadditiveclass}); on bipartite covering instances the class of all $\ell_1$-non-expansive repairs has constant exactly $3/2$ (Thm.~\ref{thm:threehalves})\tabularnewline
+\raggedright \quad forward scan & \raggedright non-expansive & \raggedright $\Omega(d)$ (Thm.~\ref{thm:order})\tabularnewline
+\raggedright \quad sorted (weakly-descending) & \raggedright non-expansive & \raggedright $\le \|y^*{-}\hat y\|_0 + 2\min(|A|,|B|){-}1$ (Thm.~\ref{thm:sharpwarm}; attained at every $\min(|A|,|B|)$, Prop.~\ref{prop:sharpattained}; ${+}1$ at $|A|{=}1$, Prop.~\ref{prop:sortedwarm}); and $\ge \|y^*{-}\hat y\|_0 + \min(|A|,|B|){-}1$ on an explicit balanced family (Thm.~\ref{thm:balancedlb}): no additive constant\tabularnewline
+\raggedright \quad cover-directed (Thm.~\ref{thm:coverscan}) & \raggedright non-expansive & \raggedright $\le \|y^*{-}\hat y\|_0 + \tau(G(p)) \le 2\|y^*{-}\hat y\|_0$, tight in the limit for some cover and order (Prop.~\ref{prop:chainfam}); not additive (Thm.~\ref{thm:noadditiveclass})\tabularnewline
+\raggedright $\ell_1$-nearest face point (Prop.~\ref{prop:faceadditive}; consults the optimal face) & \raggedright bound toward optimal duals only: $\le 2\|\hat y{-}y^*\|_1$ to every optimal $y^*$, meeting \citeauthor{chen2022}'s composition hypothesis; \emph{not} known non-expansive toward all of $\dfeas$ & \raggedright additive with constant $0$: the output lies on the face\tabularnewline
+\raggedright Greedy, integral split & \raggedright \emph{not} non-expansive; no finite constant (Prop.~\ref{prop:fail}) & \raggedright $?$\tabularnewline
+\raggedright Alternating projection (A-first) & \raggedright \emph{not} non-expansive; no finite constant (Prop.~\ref{prop:fail}) & \raggedright $?$\tabularnewline
+\raggedright One-sided walk & \raggedright \emph{not} non-expansive (ratio $2$ witness, Sec.~\ref{sec:exp}); movement $\le 2\|\hat y{-}y^*\|_1$, distance $\le 3\|\hat y{-}y^*\|_1$ & \raggedright $\le \|y^*{-}\hat y\|_0 + \tau(G(p)) \le 2\|y^*{-}\hat y\|_0$ under every tie-break, no additive constant (Prop.~\ref{prop:walkbound}); the factor~$2$ tight in the limit (Prop.~\ref{prop:ladderfam}); can lose to the sorted scan under fixed tie-breaks (Sec.~\ref{sec:exp}); lowest among the repairs in Tables~\ref{tab:exp} (reference-optimum $\ell_0$) and~\ref{tab:solver} (dual adjustments)\tabularnewline
+\raggedright Uniform shift ($\ell_\infty^\pm$-projection, rounded up) & \raggedright $\ell_\infty^\pm$-optimal in covering coordinates; $\ell_1$ displacement $\Theta(n\varepsilon)$ & \raggedright face-$\ell_0 \ge (|A|{+}|B|) - \lfloor\opt/\lceil\varepsilon/2\rceil\rfloor$; wrong in every coordinate on an explicit family (Obs.~\ref{obs:shift})\tabularnewline
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\section{Order-dependence: the family in full}\label{app:order}
+
+This appendix proves Theorem~\ref{thm:order}, computes the quantities on which its two orders agree
+and disagree, and tabulates the family for $d \le 6$ (Table~\ref{tab:order}). Throughout, the instance has $|A| = 1$ with
+left coordinate $u$ and right coordinates $v_0, \dots, v_{d-1}$. The forward scan processes the
+constraints in index order, which on this family is lightest first, and the reverse scan heaviest
+first.
+
+\begin{proof}[Proof of Theorem~\ref{thm:order}]
+Take $w_{0k} = k+1$ for $k = 0,\dots,d-1$ and $\hat{y} = 0$. Writing $\mathrm{val}(t) = t +
+\sum_k (k+1-t)^+$ for the best dual with $u = t$, we have $\mathrm{val}(t) = t + (d - t) = d$ for
+$t \in [d-1, d]$ and $\mathrm{val}(t) > d$ for $t < d-1$, so $\opt = d$ and the integral optimal
+face consists of exactly the two points $y^{(d)} = (d \mid \mathbf{0})$ and
+$y^{(d-1)} = (d-1 \mid e_{d-1})$. (The optimum is not unique, consistent with the face formula in the
+proof of Proposition~\ref{prop:sortedwarm}, where $W_2 = d-1$.) The prediction $\hat{y} = 0$
+differs from $y^{(d)}$ in one coordinate.
+
+Forward scan: at step $k$ the residual is $(k+1) - k - 0 = 1$, so $u$ rises by $1$ and $v_k$ becomes
+$1$. The output is $u = d$, $v \equiv 1$. It differs from $y^{(d)}$ in the $d$ right coordinates,
+and from $y^{(d-1)}$ in $u$ and the $d-1$ right coordinates below the top, so its face distance is
+$d$.
+
+Reverse scan: the first step $k = d-1$ has residual $d$, giving $u = d$ and $v_{d-1} = d$; all
+later residuals are non-positive. The output differs from $y^{(d)}$ in one coordinate.
+
+Both outputs have $\sum_i y_i = 2d$, hence the gap $d$.
+\end{proof}
+
+\paragraph{The two $\ell_1$ distances.} The two $\ell_1$ equalities also follow by direct computation. Both outputs lie
+at $\ell_1$ displacement $2d$ from the prediction (forward: $d$ unit raises of $u$ and $d$ right
+coordinates raised to $1$; reverse: $u$ and $v_{d-1}$ each raised by $d$). On the continuous face
+$\{(t \mid (d-t)e_{d-1}) : t \in [d-1,d]\}$, writing $s = d - t \in [0,1]$, the forward output is at
+$\ell_1$ distance $s + (d-1) + (1-s) = d$ and the reverse output at $s + (d-s) = d$, for every $t$.
+The prediction $\hat y = 0$ is at $t + s = d$. In either order, the repair leaves the $\ell_1$
+distance to the optimal face unchanged. The gap and both $\ell_1$ distances therefore cannot tell
+the orders apart, and neither can the realised $\ell_\infty$ displacement from the prediction, which is
+$d$ for both.
+
+\paragraph{The $\ell_\infty$ reversal.} The $\ell_\infty$ distance to the face does tell the orders
+apart, but it ranks them the wrong way. With $s = d - t$ as above, the forward output
+$(d \mid \mathbf{1})$ is at $\max(s,1,|1-s|) = 1$ and the reverse output $(d \mid d\,e_{d-1})$ at
+$\min_t \max(s,t) = d-1$. The same two values hold in the $\ell_\infty^\pm$ norm of
+\citet{sakaue2022} evaluated in covering coordinates; in their difference coordinates the forward
+output is still at $1$ and the reverse output is at $d$, so the reversal persists. For $d \ge 3$
+the $\ell_\infty$ ranking is therefore strict and reverses the $\ell_0$ ranking. An iteration bound
+parameterised by the $\ell_\infty^\pm$ distance from the starting point to the optimal set, the form
+of \citet[Prop.~2]{sakaue2022}, would prefer the order that an $\ell_0$-parameterised bound must
+avoid.
+
+\begin{table}[ht]
+\centering
+\caption{The family of Theorem~\ref{thm:order}. The two orders agree on the dual gap, the realised $\ell_1$ displacement and the
+$\ell_1$ face distance, and the last equals the prediction's own.}
+\label{tab:order}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{rrrrrrrrrrr}
+\toprule
+& \multicolumn{3}{c}{$\ell_0$ to face} & \multicolumn{2}{c}{$\ell_\infty$ to face}
+& \multicolumn{2}{c}{dual gap} & \multicolumn{2}{c}{$\ell_1$ to face} & realised\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-10}
+$d$ & pre & fwd & rev & fwd & rev & fwd & rev & fwd & rev & $\ell_1$ disp.\\
+\midrule
+2 & 1 & 2 & 1 & 1 & 1 & 2 & 2 & 2 & 2 & 4\\
+3 & 1 & 3 & 1 & 1 & 2 & 3 & 3 & 3 & 3 & 6\\
+4 & 1 & 4 & 1 & 1 & 3 & 4 & 4 & 4 & 4 & 8\\
+5 & 1 & 5 & 1 & 1 & 4 & 5 & 5 & 5 & 5 & 10\\
+6 & 1 & 6 & 1 & 1 & 5 & 6 & 6 & 6 & 6 & 12\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The $\ell_1$ dependence is not slack.} On this family the prediction is at face
+distance $1$, so in the chain of Section~\ref{sec:composition} a bound in the prediction's $\ell_0$
+error would give $O(m\sqrt{n} + m + n\log n)$. The forward scan yields post-repair $\ell_0 = d$,
+which is the dense regime. (This compares the parameter only: with $|A| = 1 < |B|$ the family has no
+perfect matching, so it is not an instance of \citet[Thm.~3.2]{chen2022}.) Both orders are allowed
+by Theorem~\ref{thm:nonexp} and agree on the gap and both $\ell_1$ distances. We do not prove that no
+$\ell_1$-based analysis could select between them: that would need a lower bound over a defined
+class of analyses, which we leave open.
+
+\section{The sorted scan in full}\label{app:sorted}
+
+This appendix proves the results of Section~\ref{sec:sorted} on the sorted repair
+$\repair_\downarrow$ (Definition~\ref{def:sorted}) and gives the cold-start results in full:
+$2\min(|A|,|B|)$ is not an envelope (Proposition~\ref{prop:coldrefuted}), and the exact envelope is
+$\lfloor\tfrac52\min(|A|,|B|)\rfloor - 1$ for $\min(|A|,|B|) \ge 3$
+(Theorem~\ref{thm:coldfivehalves}).
+
+\subsection{Cold start}
+
+\begin{proof}[Proof of Proposition~\ref{prop:sortedcold}]
+Induction over the firings. Suppose the statement holds for all earlier ones and consider a firing at
+$(a,b)$. If $a$ were an endpoint of an earlier firing $(a,b_0)$, the inductive hypothesis gives
+$y_a = w_{ab_0}$, and descending order gives $w_{ab_0} \ge w_{ab}$, so the residual at $(a,b)$ is
+$w_{ab} - y_a - y_b \le w_{ab} - w_{ab_0} \le 0$ and no firing occurs, a contradiction. The same
+argument applies to $b$. Hence both endpoints are untouched and therefore $0$, the residual is
+$w_{ab}$, and both coordinates become $w_{ab}$. So the firings have pairwise distinct endpoints,
+that is, they form a matching, and a matching in $K_{A,B}$ has at most $\min(|A|,|B|)$ edges.
+\end{proof}
+
+An exhaustive check covers all $2{,}360{,}750$ weight matrices with entries in $\{0,\dots,4\}$ at the
+shapes $1{\times}3$, $1{\times}4$, $2{\times}2$, $2{\times}3$, $2{\times}4$ and $3{\times}3$, under
+every weakly-descending tie-break order ($134{,}081$ cold outputs across all tie-breaks). The cold
+face distance there is at most $2\min(|A|,|B|) - 1$, attained at each of the six shapes. The bound
+does not extend: a $3\times4$ instance (weights $\le 6$; $\le 3$ under a fixed tie-break) ends at
+face distance $6 = 2\min(|A|,|B|)$ under every weakly-descending order.
+Proposition~\ref{prop:sortedcold} counts moved coordinates and does not bound the face distance,
+since the output can also disagree with the face on unmoved coordinates. The natural link between
+the two, an optimal dual supported on the endpoints of the fired matching, fails in general.
+
+\begin{proposition}[The cold start can miss the face on every coordinate]\label{prop:coldrefuted}
+\begin{enumerate}
+\item[(a)] For every instance, every weakly-descending order and every optimal $f$, the cold output $q$
+satisfies $\|q - f\|_0 \le |\mathrm{supp}\, f| + |M_f| \le 3\min(|A|,|B|)$, where $M_f$ is the
+fired matching; and trivially $\|q - y^*\|_0 \le |A| + |B|$.
+\item[(b)] On
+$w = \left(\begin{smallmatrix} 12&11&0&7&10\\ 11&2&8&11&5\\ 10&11&8&12&10\\ 9&0&7&5&1 \end{smallmatrix}\right)$
+the optimal face is the single point $f = (10,9,10,7 \mid 2,1,0,2,0)$, every weakly-descending
+order fires the same matching $\{(1,1),(2,3),(3,4),(4,5)\}$ and outputs
+$q = (12,8,12,1 \mid 12,0,8,12,1)$, and $q$ disagrees with $f$ on all $9 = |A| + |B|$ coordinates:
+$\|q - y^*\|_0 = 9 > 8 = 2\min(|A|,|B|)$ under every tie-break.
+\item[(c)] The cold face distance exceeds $2\min(|A|,|B|)$ by a constant factor.
+The $k$-fold direct sum of (b) is a $4k \times 5k$ instance with cold face distance
+$9k = |A| + |B|$ against $2\min(|A|,|B|) = 8k$, a ratio of $9/4$ to $\min(|A|,|B|)$. A
+$6 \times 8$ instance has cold face distance $14 = |A| + |B|$ under the lexicographic tie-break, so
+its $k$-fold direct sum gives $\|q - y^*\|_0 / \min(|A|,|B|) = 7/3$ at arbitrarily large
+$\min(|A|,|B|)$; a $5 \times 8$ instance with a unique optimal dual and cold face distance $11$
+under the lexicographic tie-break (weights $\le 7$) gives $11/5$.
+Theorem~\ref{thm:coldfivehalves} gives the exact envelope
+$\lfloor \tfrac{5}{2}\min(|A|,|B|) \rfloor - 1$ for $\min(|A|,|B|) \ge 3$, which the
+$4 \times 5$, $5 \times 8$ and $6 \times 8$ witnesses attain at their own $\min(|A|,|B|)$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) Every fired vertex $v$ has $q_v = w_{ab} > 0$ for its fired pair and every unfired vertex has
+$q_v = 0$, so $q$ and $f$ disagree on an unfired vertex only if $f_v > 0$, and on a fired pair
+$(a, b)$ on at most two coordinates, at most one of which can have $f = 0$ since
+$f_a + f_b \ge w_{ab} > 0$. Hence $\|q - f\|_0 \le |\mathrm{supp}\, f \setminus V(M_f)| +
+|\mathrm{supp}\, f \cap V(M_f)| + |M_f| = |\mathrm{supp}\, f| + |M_f|$; and $\mathrm{supp}\, f
+\subseteq V(M^*)$ for every maximum-weight matching $M^*$ by complementary slackness, so the two
+terms are at most $2\min(|A|,|B|)$ and $\min(|A|,|B|)$ respectively. (b) is a finite check:
+$f$ is feasible and $\sum f = 41 = w(M^*)$ for $M^* = \{(1,1),(2,4),(3,2),(4,3)\}$. The
+uniqueness of $f$ and the single cold output over all $2{,}304$ weakly-descending orders of the
+positive weights are verified exactly by computer, together with (c) (Appendix~\ref{app:repro}). The face,
+the cold scan and the Hamming distance all decompose over the zero-separated blocks of a direct
+sum, which gives (c).
+\end{proof}
+
+In (b) the greedy matching is not maximum-weight ($33 < 41$), it fires all four rows, and every
+fired column receives a weight that no optimal dual agrees with, so no coordinate is left in agreement. Below
+four rows the envelope $2\min(|A|,|B|)$ holds. At four rows a $4 \times 5$ witness with weights
+$\le 6$ already exceeds it under the lexicographic tie-break. The upper bound of (a) is not tight: a finer count lowers it
+to $\lfloor \tfrac52 \min(|A|,|B|) \rfloor$ for every optimal dual, and a shift within the face
+lowers the face distance by one more, to a bound that the families of
+Proposition~\ref{prop:coldfamilies} attain.
+
+\begin{theorem}[The cold envelope is exactly $\lfloor \tfrac52\min(|A|,|B|) \rfloor - 1$ for $\min(|A|,|B|) \ge 3$]\label{thm:coldfivehalves}
+Let $m = \min(|A|,|B|)$, fix any weakly-descending order, and let $q$ be the output of
+$\repair_\downarrow$ from $\hat y = 0$. Write $F$ for the optimal face.
+\begin{enumerate}
+\item[(i)] For every optimal $f$, $\|q-f\|_0 \le \lfloor \tfrac52 m \rfloor$. For a fixed $f$ this
+  is sharp: for every $m \ge 1$ some instance has the same cold output under every
+  weakly-descending order and an optimal $f$ with $\|q-f\|_0 = \lfloor \tfrac52 m \rfloor$.
+\item[(ii)] If $m \ge 2$, the face distance satisfies
+  \[
+    \|q-y^*\|_0 \;=\; \min_{f \in F} \|q-f\|_0 \;\le\; \Bigl\lfloor \tfrac{5}{2} m \Bigr\rfloor - 1 ,
+  \]
+  that is, $\tfrac52 m - 1$ for even $m$ and $\tfrac{5m-3}{2}$ for odd $m$.
+\item[(iii)] Let $E(m)$ be the largest cold face distance $\|q-y^*\|_0$ over all instances with
+  $\min(|A|,|B|) = m$ and all weakly-descending orders. Then $E(1) = 1$, $E(2) = 3$, and
+  \[
+    E(m) \;=\; \Bigl\lfloor \tfrac{5}{2} m \Bigr\rfloor - 1 \qquad \text{for every } m \ge 3,
+  \]
+  attained by instances whose cold output is the same under every weakly-descending order. In
+  particular the bound of (ii) is attained for every $m \ge 3$, and not at $m = 2$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Write $m=\min(|A|,|B|)$ and assume without loss of generality $|A| \le |B|$ (the
+scan and the claim are symmetric in the two sides).  Let the fired pairs be
+$(a_i,c_i)$ with weights $g_i = w_{a_i c_i} > 0$, $i = 1,\dots,k$; they form a
+matching (Proposition~\ref{prop:sortedcold}), $q$ equals $g_i$ on both endpoints
+of the $i$-th pair and $0$ elsewhere, and $k \le m$.  Fix an optimal $f$ and a
+maximum-weight matching $M^*$, $|M^*| =: m' \le m$.  By complementary slackness
+every edge of $M^*$ is tight at $f$ ($f_a + f_b = w_{ab}$) and $M^*$ saturates
+$\mathrm{supp}\, f$.
+
+\emph{Classification.}  Since $f_{a_i}+f_{c_i}\ge g_i>0$, at most one endpoint of
+a fired pair carries $f=0$.  Call the pair \emph{BP} if both endpoints are
+positive, \emph{ZC} if $f_{c_i}=0$ (then $f_{a_i}\ge g_i$; \emph{ZC$^>$} when the
+inequality is strict, \emph{ZC$^=$} otherwise), and \emph{ZA} if $f_{a_i}=0$
+(then $f_{c_i}\ge g_i$; \emph{ZA$^>$}, \emph{ZA$^=$} likewise), with counts
+$\mathrm{bp},\mathrm{zc}^>,\mathrm{zc}^=,\mathrm{za}^>,\mathrm{za}^=$, so
+$k=\mathrm{bp}+\mathrm{zc}^>+\mathrm{zc}^=+\mathrm{za}^>+\mathrm{za}^=$.  Let
+$u_r$ (resp.\ $u_c$) be the number of unfired rows (columns) with $f>0$; since
+all fired rows are distinct, $u_r \le |A|-k = m-k$.
+
+\emph{Disagreement count.}  On a fired pair, $q$ equals $g_i$ twice; a ZC$^=$
+pair agrees at its row ($f_{a_i}=g_i$) and a ZA$^=$ pair at its column, so BP,
+ZC$^>$, ZA$^>$ pairs contribute at most $2$ disagreements and ZC$^=$, ZA$^=$
+pairs at most $1$.  Every unfired vertex has $q=0$, so unfired vertices
+contribute exactly $u_r+u_c$.  Hence
+\begin{equation}\label{eq:dcount}
+  \|q-f\|_0 \;\le\; 2\,\mathrm{bp} + 2\,\mathrm{zc}^> + 2\,\mathrm{za}^> +
+  \mathrm{zc}^= + \mathrm{za}^= + u_r + u_c .
+\end{equation}
+
+\emph{Firing lemma.}  No edge $e$ of positive weight can have both of the
+following properties: each endpoint of $e$ is either unfired or fired at a pair
+of weight strictly less than $w_e$; and $e$ is not itself a fired pair.  Indeed,
+in a weakly-descending order every fired pair of weight $< w_e$ is processed
+strictly after $e$, and a vertex moves only when its pair fires; so when $e$ is
+processed both endpoints still stand at $0$, the residual is $w_e > 0$, and $e$
+fires.
+
+\emph{Hosting.}  Consider an unfired column $d$ with $f_d>0$.  It is
+$M^*$-saturated; let $(r,d) \in M^*$, a tight edge of weight $f_r + f_d > 0$.
+If $r$ is unfired, the firing lemma applies to $(r,d)$ directly: impossible.
+If $r=a_i$ with pair $i$ of type ZC, then $w_{a_i d} = f_{a_i} + f_d \ge g_i +
+f_d > g_i$, so the pair of $a_i$ is lighter than the edge while $d$ is unfired:
+the firing lemma again.  Hence every unfired positive column is
+$M^*$-matched to the row of a BP or ZA pair.  Likewise, a ZA$^>$ column $c_i$
+is $M^*$-matched to some row $r \neq a_i$ (matching to $a_i$ would force
+$f_{c_i} = w_{a_i c_i} = g_i$).  Its tight edge has weight $f_r + f_{c_i} >
+f_{c_i} > g_i$, heavier than the pair of $c_i$; if $r$ is unfired, or if
+$r = a_j$ of type ZC (whence $w \ge g_j + f_{c_i} > g_j$), the firing
+lemma forbids the edge.  So every ZA$^>$ column is also $M^*$-matched to
+a BP or ZA row.  Since $M^*$ is a matching and there are only $\mathrm{bp} +
+\mathrm{za}^> + \mathrm{za}^=$ BP-or-ZA rows,
+\begin{equation}\label{eq:host}
+  u_c + \mathrm{za}^> \;\le\; \mathrm{bp} + \mathrm{za}^> + \mathrm{za}^=,
+  \qquad\text{i.e.}\qquad
+  u_c \;\le\; \mathrm{bp} + \mathrm{za}^= .
+\end{equation}
+
+\emph{Two counts.}  First, substituting \eqref{eq:host} and $u_r\le m-k$ into
+\eqref{eq:dcount} and rounding $\mathrm{zc}^=$, $\mathrm{za}^=$ up to twice
+themselves:
+\begin{equation}\label{eq:countone}
+  \|q-f\|_0 \;\le\; 3\,\mathrm{bp} + 2(\mathrm{zc}^>+\mathrm{zc}^=+\mathrm{za}^>+\mathrm{za}^=) + (m-k)
+           \;=\; m + k + \mathrm{bp} .
+\end{equation}
+Second, the rows of $\mathrm{supp}\, f$ (there are
+$\mathrm{bp}+\mathrm{zc}^>+\mathrm{zc}^=+u_r$ of them) and the columns of
+$\mathrm{supp}\, f$ ($\mathrm{bp}+\mathrm{za}^>+\mathrm{za}^=+u_c$) are
+saturated by the matching $M^*$, so each count is at most $m' \le m$; adding
+these to $\mathrm{zc}^>+\mathrm{za}^> \le k - \mathrm{bp}$ and comparing with
+\eqref{eq:dcount}:
+\begin{equation}\label{eq:counttwo}
+  \|q-f\|_0 \;\le\; (\mathrm{bp}+\mathrm{zc}^>+\mathrm{zc}^=+u_r) +
+  (\mathrm{bp}+\mathrm{za}^>+\mathrm{za}^=+u_c) + (\mathrm{zc}^>+\mathrm{za}^>)
+           \;\le\; 2m + k - \mathrm{bp} .
+\end{equation}
+Adding \eqref{eq:countone} and \eqref{eq:counttwo}:
+$2\|q-f\|_0 \le 3m + 2k \le 5m$, and $\|q-f\|_0$ is an integer. That is the bound in (i).
+
+\emph{Sharpness of (i).} On
+$w = \left(\begin{smallmatrix} 5&0&4\\ 4&1&0 \end{smallmatrix}\right)$ the pair of weight $5$ fires
+first, both pairs of weight $4$ meet one of its endpoints, and the pair of weight $1$ then fires, so
+every weakly-descending order outputs $q = (5,1 \mid 5,1,0)$. The dual $f = (3,2 \mid 2,0,1)$ is
+feasible with $\sum f = 8 = \opt$ (the matching $\{(1,3),(2,1)\}$), and it differs from $q$ in all
+$5 = \lfloor \tfrac52 \cdot 2 \rfloor$ coordinates. On $w = (2\ \ 1)$ every order outputs
+$q = (2 \mid 2, 0)$, and the optimal $f = (1 \mid 1, 0)$ differs from it in
+$2 = \lfloor \tfrac52 \rfloor$ coordinates. The optimal face, the cold scan and the Hamming distance
+all decompose over zero-separated direct sums (as in the proof of
+Proposition~\ref{prop:coldrefuted}(c)), so $\lfloor m/2 \rfloor$ copies of the first block, together
+with one copy of the second when $m$ is odd, give for every $m \ge 1$ an order-free instance and an
+optimal $f$ with $\|q-f\|_0 = \lfloor \tfrac52 m \rfloor$. Hence no count that holds for every
+optimal $f$ can improve (i). The improvement in (ii) comes from choosing $f$ in the face, through
+the shifts \eqref{eq:shiftone} and \eqref{eq:shifttwo} below.
+
+\emph{Slack identities.} For an optimal $f$ write
+$\rho_f = \mathrm{bp}+\mathrm{zc}^>+\mathrm{zc}^=+u_r$ and
+$\kappa_f = \mathrm{bp}+\mathrm{za}^>+\mathrm{za}^=+u_c$ for the numbers of rows and of columns of
+$\mathrm{supp}\, f$, and $\Delta_f \ge 0$ for the amount by which \eqref{eq:dcount} is strict.
+Substituting $k = \mathrm{bp}+\mathrm{zc}^>+\mathrm{zc}^=+\mathrm{za}^>+\mathrm{za}^=$ into the
+right-hand side of \eqref{eq:dcount} gives, with no inequality dropped,
+\begin{align}
+  \|q-f\|_0 &= m+k+\mathrm{bp} - s_1(f), \notag\\
+  s_1(f) &= \Delta_f + (m-k-u_r) + (\mathrm{bp}+\mathrm{za}^=-u_c) + \mathrm{zc}^= ,
+  \label{eq:sone}\\[2pt]
+  \|q-f\|_0 &= 2m+k-\mathrm{bp} - s_2(f), \notag\\
+  s_2(f) &= \Delta_f + (m-\rho_f) + (m-\kappa_f) + \mathrm{zc}^= + \mathrm{za}^= .
+  \label{eq:stwo}
+\end{align}
+For \eqref{eq:stwo}, note that the first expression in \eqref{eq:counttwo},
+$\rho_f + \kappa_f + \mathrm{zc}^> + \mathrm{za}^>$, is not a bound but a rewriting of the
+right-hand side of \eqref{eq:dcount}. Every bracket is non-negative, by $u_r \le m-k$,
+\eqref{eq:host} and $\rho_f, \kappa_f \le m' \le m$. So \eqref{eq:sone} and \eqref{eq:stwo} are
+\eqref{eq:countone} and \eqref{eq:counttwo} with their slacks written out. (In
+\eqref{eq:countone} only $\mathrm{zc}^=$ is rounded up, since \eqref{eq:host} has already
+doubled $\mathrm{za}^=$.) Adding the two, $s_1(f)+s_2(f) = 3m+2k-2\|q-f\|_0$.
+
+\emph{Proof of (ii).} Let $m \ge 2$, with $|A| = m \le |B|$ as above. Call an optimal $f$ a
+\emph{minimiser} if it minimises $\|q-f\|_0$ over the optimal face. Minimisers may be taken
+integral (Section~\ref{sec:prelim}, justified in Appendix~\ref{app:early}), and every move below
+changes $f$ by an integer amount, so integrality is kept; the argument also works verbatim over the
+full face. Let $d_0 = \|q-y^*\|_0$ be the common value, and suppose, for a contradiction, that
+$2d_0 \ge 5m-1$.
+
+\emph{Step 1: every row fires.} Since $5m-1 \le 2d_0 \le 3m+2k$, we have
+$k \ge m - \tfrac12$, so $k = m = |A|$. Every row is fired, so $u_r = 0$, the bracket $m-k-u_r$
+in \eqref{eq:sone} vanishes, and $\rho_f = \mathrm{bp}+\mathrm{zc}^>+\mathrm{zc}^=
+= m-\mathrm{za}^>-\mathrm{za}^=$. The number $k$ depends on the order and not on $f$, so every
+minimiser $f$ satisfies
+\[
+  s_1(f)+s_2(f) = 5m-2d_0 \le 1, \qquad
+  s_2(f) = \Delta_f + \mathrm{za}^> + 2\,\mathrm{za}^= + \mathrm{zc}^= + (m-\kappa_f).
+\]
+
+\emph{Step 2: where a minimiser agrees with $q$.} Let $f$ be a minimiser; one of $s_1(f)$,
+$s_2(f)$ is $0$. If $s_2(f) = 0$, then $\Delta_f = \mathrm{zc}^= = \mathrm{za}^= = 0$. If
+$s_1(f) = 0$, then $\Delta_f = \mathrm{zc}^= = 0$ by \eqref{eq:sone}, and $s_2(f) \le 1$ forces
+$\mathrm{za}^= = 0$, because $\mathrm{za}^=$ enters $s_2$ with coefficient $2$. (Count one alone
+does not give this: from $s_1 = 0$ it gives only $u_c = \mathrm{bp}+\mathrm{za}^=$.) So in every
+case $\Delta_f = 0$ and $\mathrm{zc}^= = \mathrm{za}^= = 0$. Then \eqref{eq:dcount} is an
+equality and every fired pair is BP, ZC$^>$ or ZA$^>$, so it disagrees at both endpoints. There
+is no unfired row, and an unfired column disagrees exactly when $f$ is positive there. Hence a
+minimiser $f$ agrees with $q$ exactly on
+\[
+  Z_f = \{ d \in B : d \text{ unfired},\ f_d = 0 \}, \qquad d_0 = |A|+|B|-|Z_f| .
+\]
+
+\emph{Step 3: the unfired-column lemma.} If $a_i$ is a fired row and $d$ an unfired column, then
+$w_{a_i d} \le g_i$. Otherwise $a_i$ is fired at a pair lighter than $(a_i,d)$, $d$ is unfired,
+and $(a_i,d)$ is not a fired pair, which the firing lemma forbids.
+
+\emph{Step 4: Shift I, a minimiser with at most $m-1$ positive columns.} Let $f$ be a minimiser
+with $\kappa_f = m$, and let $P$ be its set of positive columns, so $|P| = m = |A|$. For
+$0 \le e \le e^* := \min_{b \in P} f_b$ put
+\begin{equation}\label{eq:shiftone}
+  f^{(e)} = f + e\,(\mathbf{1}_A - \mathbf{1}_P) .
+\end{equation}
+The sum is unchanged because $|A| = |P|$. A pair $(a,b)$ with $b \in P$ keeps $f_a+f_b$, and a
+pair with $b \notin P$ gains $e$. So $f^{(e)}$ is feasible, and it is non-negative since
+$e \le e^*$. Hence $f^{(e)}$ is optimal. The columns of $Z_f$ are zero, so they lie outside $P$
+and do not move. Thus $f^{(e)}$ still agrees with $q$ on $Z_f$, so $\|q-f^{(e)}\|_0 \le d_0$,
+with equality by minimality. Hence $f^{(e^*)}$ is a minimiser, and the column where $e^*$ is
+attained has dropped to $0$, so $\kappa_{f^{(e^*)}} \le m-1$. Fix a minimiser $f$ with
+$\kappa_f \le m-1$.
+
+\emph{Step 5: the shape it is forced into.} By Step 1, $s_2(f) \ge m-\kappa_f \ge 1$, so
+$s_2(f) = 1$ and $s_1(f) = 0$. In particular $2d_0 = 5m-1$ and $m$ is odd, which already rules
+out even $m$. For odd $m$ ($m \ge 3$), $s_2(f) = 1$ forces $\kappa_f = m-1$ and
+$\mathrm{za}^> = \mathrm{za}^= = 0$, so $\rho_f = m$ and every fired pair is BP or ZC$^>$. And
+$s_1(f) = 0$ forces $u_c = \mathrm{bp}+\mathrm{za}^= = \mathrm{bp}$. Hence
+$m-1 = \kappa_f = \mathrm{bp}+u_c = 2\,\mathrm{bp}$, so $\mathrm{bp} = \tfrac{m-1}{2} \ge 1$.
+
+\emph{Step 6: Shift II, and the contradiction.} Let $X$ be the set of BP rows and $Y$ the set of
+unfired columns with $f > 0$, so $|X| = \mathrm{bp} = u_c = |Y| \ge 1$. For
+$0 \le e \le \min_{b \in Y} f_b$ put
+\begin{equation}\label{eq:shifttwo}
+  f^{(e)} = f + e\,(\mathbf{1}_X - \mathbf{1}_Y) .
+\end{equation}
+The sum is unchanged. A pair $(a,b)$ with $b \notin Y$ loses nothing, and a pair with $a \in X$,
+$b \in Y$ keeps $f_a+f_b$. Now let $b \in Y$ and $a \notin X$. Then $a$ is fired (Step 1) and not
+BP, so its pair $(a,c_i)$ is ZC$^>$ and $f_a > g_i \ge w_{ab}$ by Step 3; hence
+$f^{(e)}_a + f^{(e)}_b \ge f_a \ge w_{ab}$. Non-negativity holds for $e \le \min_Y f$, so
+$f^{(e)}$ is optimal. It still agrees with $q$ on $Z_f$, which meets neither $X$ nor $Y$. At
+$e = \min_Y f$ some $y \in Y$ reaches $0 = q_y$, which is a new agreement. So
+$\|q-f^{(e)}\|_0 \le d_0-1$, contradicting minimality.
+
+Therefore $2d_0 \le 5m-2$. That is (ii): $d_0 \le \tfrac52 m - 1$ for even $m$, and, since $d_0$
+is an integer, $d_0 \le \tfrac{5m-3}{2}$ for odd $m$.
+
+\emph{Proof of (iii), small $m$.} First let $m = 1$, say $A = \{a\}$. The first positive pair
+processed has both endpoints at $0$ and fires, so $g_1 = \max w = \opt$. Then
+$(\opt \mid 0,\dots,0)$ is optimal and differs from $q$ only at $c_1$, so $E(1) \le 1$; on
+$w = (2\ \ 1)$ no optimal dual equals $q$, since $\sum q = 4 > 2 = \opt$. (So the bound of (ii)
+also holds at $m = 1$.)
+
+Now let $m = 2$, say $A = \{a_1,a_2\}$ with first fired pair $(a_1,c_1)$, so again $g_1 = \max w$.
+We give an optimal $f$ that agrees with $q$ at $a_2$ and at every column other than $c_1$ and $c_2$,
+so $\|q-y^*\|_0 \le 3$. If $k = 0$ all weights vanish and $f = q = 0$.
+
+If $k = 1$, then $a_2$ is unfired, so by the firing lemma the only pair at $a_2$ that can be
+positive is $(a_2,c_1)$. Let $\beta = w_{a_2c_1}$, and let $f$ be $\opt-\beta$ at $a_1$, $\beta$
+at $c_1$ and $0$ elsewhere. The pair $(a_1,c_1)$ is covered because $\opt \ge g_1$. A pair
+$(a_1,b)$ with $b \ne c_1$ is covered because $\{(a_1,b),(a_2,c_1)\}$ is a matching, and
+$(a_2,c_1)$ is covered with equality. The sum is $\opt$, and $f \ge 0$ since
+$\opt \ge \beta$. This $f$ differs from $q$ at most at $a_1$ and $c_1$.
+
+If $k = 2$, let $(a_2,c_2)$ be the second fired pair, $\beta = w_{a_2c_1}$ and
+$\beta' = \max(\beta, g_2)$. Put $f_{a_1} = \opt-\beta'$, $f_{a_2} = g_2$,
+$f_{c_1} = \beta'-g_2$, and $0$ on every other column; the sum is $\opt$. The pair $(a_1,c_1)$
+has $f_{a_1}+f_{c_1} = \opt-g_2 \ge g_1$, since the fired pairs form a matching. For $(a_1,b)$
+with $b \ne c_1$, $w_{a_1b}+\beta \le \opt$ because $\{(a_1,b),(a_2,c_1)\}$ is a matching.
+Also $w_{a_1b}+g_2 \le \opt$: for $b \ne c_2$ because $\{(a_1,b),(a_2,c_2)\}$ is a matching, and
+for $b = c_2$ because $w_{a_1c_2} \le g_1$. Hence $f_{a_1} \ge w_{a_1b}$. Next,
+$(a_2,c_1)$ has $f_{a_2}+f_{c_1} = \beta' \ge \beta$, $(a_2,c_2)$ has $g_2$, and
+$(a_2,d)$ with $d$ unfired has $g_2 \ge w_{a_2d}$ by the unfired-column lemma (Step 3).
+Non-negativity holds because $\opt \ge \max(\beta, g_2)$. So $E(2) \le 3$.
+
+The block $w = \left(\begin{smallmatrix} 5&0&4\\ 4&1&0 \end{smallmatrix}\right)$ above attains
+$3$. Its maximum matching $\{(1,3),(2,1)\}$ is unique, so every optimal $y$ is tight on it and
+vanishes on column $2$. Hence $y_{a_1} \le 4 < 5$, $y_{c_1} \le 4 < 5$ and
+$y_{c_2} = 0 < 1$ against $q = (5,1 \mid 5,1,0)$. The optimal dual $(4,1 \mid 3,0,0)$ attains
+$3$. So $E(2) = 3$, below the value $4$ that (ii) allows.
+
+\emph{Proof of (iii), attainment for $m \ge 3$.} For $m \ge 4$ this is
+Proposition~\ref{prop:coldfamilies}. For $m = 3$ take the $3\times4$ witness of this section,
+$w = \left(\begin{smallmatrix} 4&6&5&3\\ 5&4&3&0\\ 4&4&0&1 \end{smallmatrix}\right)$. The pairs
+$(1,2)$, $(2,1)$, $(3,4)$ of weights $6, 5, 1$ form a matching, and every other positive pair
+meets one of them at a strictly heavier pair. By the dominance argument in the proof of
+Proposition~\ref{prop:coldfamilies}, every weakly-descending order outputs
+$q = (6,5,1 \mid 5,6,0,1)$. The maximum matching is unique:
+$M^* = \{(1,3),(2,1),(3,2)\}$, of weight $14$. So every optimal $y$ has $y_{c_4} = 0$,
+$y_{a_1} = 5 - y_{c_3} \le 5$, $y_{c_2} = 4 - y_{a_3} \le 4$ and $y_{a_2}+y_{c_1} = 5$. That
+forces four disagreements: at $c_4$ ($0 \ne 1$), at $a_1$ ($\le 5 < 6$), at $c_2$
+($\le 4 < 6$), and at least one of $a_2, c_1$, since both would need the value $5$. So $y$ agrees
+with $q$ on at most one of $a_2, c_1$, and possibly at $a_3$ and $c_3$. The two cases below show
+that an agreement at $c_3$ or at $a_3$ excludes every other agreement, so $y$ agrees with $q$
+on at most one coordinate.
+\begin{itemize}
+\item If $y_{c_3} = 0$, then $y_{a_1} = 5$, and $(1,2)$ gives $y_{c_2} \ge 1$, so
+  $y_{a_3} \le 3$. Also $(2,3)$ gives $y_{a_2} \ge 3$, so $y_{c_1} \le 2$, and then $(3,1)$
+  gives $y_{a_3} \ge 2$. So $a_3$ and $c_1$ disagree. And $a_2$ agrees only if $y_{a_2} = 5$,
+  that is $y_{c_1} = 0$; then $(3,1)$ forces $y_{a_3} \ge 4$, contradicting $y_{a_3} \le 3$.
+\item If $y_{a_3} = 1$, then $y_{c_2} = 3$, and $(3,1)$ gives $y_{c_1} \ge 3$. Then $(2,2)$ gives
+  $y_{a_2} \ge 1$, so $y_{c_1} \le 4 < 5$. And $a_2$ agrees only if $y_{a_2} = 5$, that is
+  $y_{c_1} = 0 < 3$. So $a_2$ and $c_1$ both disagree. And $c_3$ disagrees too, because
+  $y_{c_3} = 0$ would force $y_{a_3} \ge 2$ by the previous case.
+\end{itemize}
+So $\|q-y^*\|_0 \ge 7 - 1 = 6 = \lfloor \tfrac{15}{2} \rfloor - 1$, with equality by (ii).
+\end{proof}
+
+\begin{proposition}[Extremal families]\label{prop:coldfamilies}
+For $p \ge 2$ let $E_p$ be the instance with rows $R_1,\dots,R_p,S_1,\dots,S_p$ and columns
+$H_1,\dots,H_p,T_1,\dots,T_p,U_1,\dots,U_p$ (so $m = 2p$ and $|B| = 3p$). Set
+\[
+  r_i = 2p+i,\quad h_i = p+i,\quad s_i = 2i,\quad t_i = 2i-1 \quad (1 \le i \le p),
+\]
+\[
+  u_j = j \ (1 \le j < p),\qquad u_p = 0,
+\]
+and let the positive weights be
+\begin{gather*}
+  w_{R_iH_i} = r_i+h_i =: g_i,\qquad w_{R_iT_i} = r_i,\qquad w_{R_iU_j} = r_i+u_j,\\
+  w_{S_iH_j} = s_i+h_j,\qquad w_{S_iT_i} = t_i,\qquad w_{S_1T_2} = s_1,
+\end{gather*}
+for all $i, j$; every other weight is $0$. Let $O_p$ be defined in the same way with
+$r_i = 2p+i+2$, $s_i = 2i+2$, $t_i = 2i+1$ (and $h, u$ unchanged), plus a row $S_0$ and a column
+$T_0$ with $w_{S_0H_j} = h_j+2$ for all $j$, $w_{S_0T_0} = 1$ and $w_{S_0T_1} = 2$ (so
+$m = 2p+1$ and $|B| = 3p+1$). Then:
+\begin{enumerate}
+\item[(a)] the optimal face is a single point $f$, with $f = r$ on the $R_i$, $s$ on the $S_i$,
+  $h$ on the $H_j$, $0$ on the $T_j$ and $u$ on the $U_j$, and for $O_p$ also $f_{S_0} = 2$,
+  $f_{T_0} = 0$;
+\item[(b)] every weakly-descending order fires exactly the pairs $(R_i,H_i)$ and $(S_i,T_i)$, and
+  for $O_p$ also $(S_0,T_0)$, so the cold output $q$ is the same under every order;
+\item[(c)] $\|q-y^*\|_0 = 5p-1 = \lfloor \tfrac52 m \rfloor - 1$ on $E_p$, and
+  $\|q-y^*\|_0 = 5p+1 = \lfloor \tfrac52 m \rfloor - 1$ on $O_p$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) \emph{Optimality.} Every positive pair is covered by $f$, with equality at $(R_i,H_i)$,
+$(R_i,T_i)$, all $(R_i,U_j)$, all $(S_i,H_j)$ and $(S_1,T_2)$ (and, for $O_p$, all $(S_0,H_j)$
+and $(S_0,T_1)$). The remaining positive pairs are covered strictly:
+$f_{S_i} = s_i = t_i+1$ against $w_{S_iT_i} = t_i$, and $f_{S_0} = 2 > 1 = w_{S_0T_0}$. The
+matching $M^* = \{(R_i,U_i),(S_i,H_i)\}$, together with $(S_0,T_1)$ for $O_p$, is tight, so
+$\sum f = w(M^*)$ and $f$ is optimal by weak duality.
+
+\emph{Uniqueness.} Let $f'$ be optimal and $\delta = f'-f$. By complementary slackness $f'$ is
+tight on $M^*$ and vanishes on every vertex that $M^*$ leaves unsaturated. For $E_p$ these are
+$T_1,\dots,T_p$; for $O_p$ they are $T_0,T_2,\dots,T_p$. Every $(R_i,U_j)$ is tight at $f$, so
+$\delta_{R_i}+\delta_{U_j} \ge 0$ for all $i, j$, with equality when $j = i$. Hence
+$\delta_{R_i} \ge -\delta_{U_j} = \delta_{R_j}$ for all $i, j$, so $\delta_R \equiv \alpha$ and
+$\delta_U \equiv -\alpha$. In the same way, the pairs $(S_i,H_j)$ with $i, j \ge 1$ give
+$\delta_S \equiv \beta$ and $\delta_H \equiv -\beta$. Since $f_{U_p} = 0$, $\alpha \le 0$.
+
+For $E_p$: $(R_1,T_1)$ is tight and $\delta_{T_1} = 0$, so $\alpha \ge 0$. $(S_1,T_2)$ is tight
+and $\delta_{T_2} = 0$, so $\beta \ge 0$. $(R_1,H_1)$ is tight, so $\alpha-\beta \ge 0$. Hence
+$\alpha = \beta = 0$ and $\delta = 0$.
+
+For $O_p$: let $\tau = \delta_{T_1} \ge 0$. Tightness on $(S_0,T_1) \in M^*$ gives
+$\delta_{S_0} = -\tau$, and the tight pairs $(S_0,H_j)$ give $-\tau-\beta \ge 0$. The pair
+$(S_1,T_2)$ gives $\beta \ge 0$, so $\beta = \tau = 0$ and $\delta_{S_0} = 0$. Finally
+$(R_2,T_2)$ is tight with $\delta_{T_2} = 0$, so $\alpha \ge 0$, hence $\alpha = 0$ and
+$\delta = 0$. (Both arguments use $T_2$, hence $p \ge 2$.)
+
+(b) \emph{Dominance.} Call the listed pairs \emph{intended}. They are positive and form a matching
+that covers every row. Every positive pair $e$ that is not intended has an endpoint whose intended
+pair is strictly heavier than $e$:
+\begin{itemize}
+\item $(R_i,T_i)$ and $(R_i,U_j)$: $w_e \le r_i+p-1 < r_i+h_i = g_i$ (endpoint $R_i$);
+\item $(S_i,H_j)$: $w_e = s_i+h_j < r_j+h_j = g_j$ (endpoint $H_j$), because $s_i \le 2p < 2p+j = r_j$
+  on $E_p$ and $s_i \le 2p+2 < 2p+j+2 = r_j$ on $O_p$ (this is why $O_p$ shifts $r$ by $2$);
+\item $(S_1,T_2)$: $s_1 < t_2$, that is $2 < 3$ on $E_p$ and $4 < 5$ on $O_p$ (endpoint $T_2$);
+\item on $O_p$, $(S_0,H_j)$: $h_j+2 < g_j$ (endpoint $H_j$), and $(S_0,T_1)$: $2 < 3 = t_1$
+  (endpoint $T_1$).
+\end{itemize}
+Such a condition fixes the cold output. By induction along any weakly-descending order, when a
+pair is processed every vertex whose intended pair came earlier carries that pair's weight, and
+every other vertex is at $0$. An intended pair therefore meets two vertices at $0$ and fires. A
+pair that is not intended has an endpoint whose intended pair is strictly heavier, so that pair
+was processed earlier; the endpoint already exceeds $w_e$ and the pair does not fire. Zero pairs
+never fire. So $q = g_i$ on $R_i$ and $H_i$, $q = t_i$ on $S_i$ and $T_i$, $q = 1$ on $S_0$ and
+$T_0$ (for $O_p$), and $q = 0$ on every $U_j$.
+
+(c) By (a), $\|q-y^*\|_0 = \|q-f\|_0$. The two disagree at $R_i$ ($g_i \ne r_i$), $H_i$
+($g_i \ne h_i$), $S_i$ ($t_i = s_i - 1$) and $T_i$ ($t_i > 0$) for every $i$, and at $U_j$ for
+$j < p$ ($u_j > 0$); they agree at $U_p$. That is $4p + (p-1) = 5p-1$ on $E_p$. On $O_p$, add
+$S_0$ ($1 \ne 2$) and $T_0$ ($1 \ne 0$), for $5p+1$. Finally,
+$\lfloor \tfrac52 \cdot 2p \rfloor - 1 = 5p-1$ and
+$\lfloor \tfrac52 (2p+1) \rfloor - 1 = 5p+1$.
+\end{proof}
+
+\begin{remark}[The constant $\tfrac52$]\label{rem:coldconstant}
+Theorem~\ref{thm:coldfivehalves}(iii) gives
+$E(m)/m = \tfrac52 - \tfrac1m$ for even $m \ge 4$ and $\tfrac52 - \tfrac{3}{2m}$ for odd
+$m \ge 3$. Hence $\sup_m E(m)/m = \tfrac52$ is approached but never attained.
+
+The witnesses differ in how they depend on the tie-break. The $6\times8$ instance of
+Proposition~\ref{prop:coldrefuted}(c) reaches face distance $14$ under the lexicographic
+tie-break, but not under every order: its six cold outputs over all weakly-descending orders lie at
+face distances $11, 11, 12, 12, 13, 14$, so its minimum over orders is $11$. The families $E_p$ and $O_p$, the
+$3\times4$ witness and the $2\times3$ block of part (i) have a single cold output under every
+weakly-descending order. For example, $E_3$ is a $6\times9$ instance at face distance $14$ under
+every order, with a unique optimal dual.
+\end{remark}
+
+\subsection{Warm start}
+
+\begin{lemma}[Firing chain]\label{lem:chain}
+Let $|A| = 1$ and let $\repair_\downarrow$ fire at $k_1, k_2, \dots, k_m$ in processing order. Then
+the \emph{initial} values (after the clamping $\hat{y} \leftarrow \max(\hat{y},0)$) satisfy
+$\hat{y}_{k_1} > \hat{y}_{k_2} > \dots > \hat{y}_{k_m} \ge 0$.
+\end{lemma}
+\begin{proof}
+Each coordinate is processed once, and the scan only raises, so when $k_i$ is processed its value is
+still $\hat{y}_{k_i}$. A firing there sets
+$y_a \leftarrow y_a + (w_{k_i} - y_a - \hat{y}_{k_i}) = w_{k_i} - \hat{y}_{k_i}$.
+Since $y_a$ strictly increases at each firing,
+$w_{k_i} - \hat{y}_{k_i} < w_{k_{i+1}} - \hat{y}_{k_{i+1}}$, and descending order gives
+$w_{k_i} \ge w_{k_{i+1}}$, so
+$\hat{y}_{k_{i+1}} < \hat{y}_{k_i} + (w_{k_{i+1}} - w_{k_i}) \le \hat{y}_{k_i}$.
+\end{proof}
+
+\begin{corollary}\label{cor:onenew}
+For $|A| = 1$, $\repair_\downarrow$ creates \emph{at most one} new nonzero among the right-side
+coordinates. (The left coordinate $y_a$ may also become nonzero; the count $N$ in the proof of
+Proposition~\ref{prop:sortedwarm} does not include it.) The hypothesis is needed: on
+$|A| = |B| = 2$ with $w_{00} = 5$, $w_{11} = 3$, $w_{01} = w_{10} = 1$ and $\hat y = 0$, the
+descending scan fires twice and creates two.
+\end{corollary}
+\begin{proof}
+By Lemma~\ref{lem:chain}, the values $\hat{y}_{k_1}, \dots, \hat{y}_{k_{m-1}}$ are all strictly
+greater than $\hat{y}_{k_m} \ge 0$, hence all nonzero. So at most one fired index, the last,
+can have started at $0$, and a firing at an already-nonzero coordinate creates no new nonzero.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:sortedwarm}]
+Write $W = \max_k w_k$, let $W_2$ be the second largest weight counted with multiplicity (read
+$W_2 = 0$ when $|B| = 1$, where there is no second weight), and fix an
+argmax $k^*$. For $u = t \ge 0$ the best completion has value
+$\mathrm{val}(t) = t + \sum_k (w_k - t)^+$, which equals $W$ exactly for $t \in [W_2, W]$ and
+exceeds $W$ elsewhere; so $\opt = W$ and the optimal face is
+$\{(t \mid v(t)) : t \in [W_2, W]\}$ with $v(t)_{k^*} = W - t$ and $v(t)_k = 0$ for $k \ne k^*$. Since
+the coordinates off $k^*$ contribute a term independent of $t$, the distance decomposes as
+$d(y) = N(y) + \delta(y)$, where $N(y) = |\{k \ne k^* : y_k \ne 0\}|$ and
+$\delta(y) = \min_{t \in [W_2, W]} \big([y_a \ne t] + [y_{k^*} \ne W - t]\big)$.
+Corollary~\ref{cor:onenew} gives $\Delta N \le 1$, so it suffices to prove $\Delta \delta \le 0$.
+Note first that after any firing at $k$ we have $y_a = w_k - \hat{y}_k \le w_k \le W$, and if no
+firing occurs then $y$, hence $\delta$, is unchanged; so we may assume some constraint fires, and
+then the final iterate satisfies $y_a \le W$, which is all that is used below.
+
+\emph{Case $\delta(\hat{y}) = 0$.} Then $\hat{y}_a \in [W_2, W]$ and $\hat{y}_{k^*} = W - \hat{y}_a$.
+For $k \ne k^*$, $\hat{y}_a + \hat{y}_k \ge \hat{y}_a \ge W_2 \ge w_k$; and
+$\hat{y}_a + \hat{y}_{k^*} = W = w_{k^*}$. So $\hat{y}$ is already feasible, no constraint fires, and
+$\delta$ is unchanged.
+
+\emph{Case $\delta(\hat{y}) = 2$.} Immediate, since $\delta \le 2$ always.
+
+\emph{Case $\delta(\hat{y}) = 1$.} Suppose $\delta(\repair_\downarrow(\hat{y})) = 2$. As $y_{k^*} \ge 0$,
+this means $y_a \notin [W_2, W]$ and $y_{k^*} > W - W_2$; with $y_a \le W$ we get $y_a < W_2$. Note that
+$y_{k^*}$ is still at its initial value when constraint $k^*$ is processed (it is touched only
+there), and $y_a \ge \hat{y}_a$ at every moment. If $k^*$ fires, then immediately afterwards
+$y_a = W - \hat{y}_{k^*}$, and $y_a$ only increases, so $W - \hat{y}_{k^*} < W_2$, i.e.
+$\hat{y}_{k^*} > W - W_2$. Then $\delta(\hat{y}) = 1$ forces $\hat{y}_a \in [W_2, W]$, but firing
+at $k^*$ requires $y_a + \hat{y}_{k^*} < W$ at that moment, hence
+$\hat{y}_a + \hat{y}_{k^*} < W$, while $\hat{y}_a \ge W_2$ and $\hat{y}_{k^*} > W - W_2$ give
+$\hat{y}_a + \hat{y}_{k^*} > W$, a contradiction. If instead $k^*$
+does not fire, then $y_{k^*} = \hat{y}_{k^*}$ (each coordinate is processed once), so
+$\hat{y}_{k^*} > W - W_2$; and $y_a \ge \hat{y}_a$ gives $\hat{y}_a < W_2$. Both coordinates are then
+misaligned, i.e. $\delta(\hat{y}) = 2$, contradicting the case assumption.
+
+Hence $\Delta\delta \le 0$ and $\Delta d = \Delta N + \Delta \delta \le 1$.
+\end{proof}
+
+The argument covers ties: if the maximum weight is attained more than once, then $W_2 = W$, the
+face collapses to the single point $(W \mid 0)$, and every step of the proof goes through with
+$[W_2, W] = \{W\}$. Only weak descent is used, in Lemma~\ref{lem:chain} and nowhere else, so the
+bound holds for every tie-break. An exhaustive sweep covers $150{,}827{,}580$ instances
+($|B| \le 5$, all weights in $\{0,\dots,4\}$, all predictions in $\{0,\dots,5\}^{|B|+1}$) under
+every weakly-descending order, $7.19\times10^{8}$ (instance, order) pairs in total. It finds zero
+violations, and the $+1$ is attained on $9{,}896{,}766$ of these pairs.
+
+\paragraph{The $+1$ needs $\min(|A|,|B|) = 1$.} No such bound holds once $\min(|A|,|B|) \ge 2$: on
+the $2\times3$ instance $w = (1\,2\,5;\,4\,5\,6)$ with $\hat y = (0,0 \mid 0,0,3)$, both weakly-descending
+orders end at face distance $4$ from distance $2$, and on a $2\times6$ instance the increase reaches $3$.
+Theorem~\ref{thm:sharpwarm}, proved next, gives the worst case.
+
+\begin{proof}[Proof of Theorem~\ref{thm:sharpwarm}]
+Write $p = \max(\hat{y},0)$ and $q = \repair_{\downarrow}(p)$, fix any optimal dual
+$f = (u^* \mid v^*)$, and fix a maximum-weight matching $M$ (an integral optimal primal exists by
+total unimodularity). Throughout, $(u \mid v)$ denotes the scan's current iterate and
+$\mathrm{ham}(\cdot\,,\cdot)$ counts the coordinates where two vectors differ. Call a coordinate
+\emph{aligned} if $p$ agrees with $f$ there, and
+\emph{damaged} if it is aligned and $q$ differs from $f$ there. Coordinates never decrease and
+change only by hosting a firing, so a damaged coordinate is exactly an aligned coordinate that
+hosts a firing, and any coordinate's first firing occurs while it still holds its starting value.
+Writing $D(f)$ for the number of damaged coordinates and $G(f) \ge 0$ for the number of
+coordinates brought into agreement with $f$,
+\[
+\mathrm{ham}(q, f) \;=\; \mathrm{ham}(p, f) + D(f) - G(f) \;\le\; \mathrm{ham}(p, f) + D(f).
+\]
+Since $f \ge 0$, clamping helps coordinatewise, so it suffices to prove
+$D(f) \le 2\min(|A|,|B|) - 1$ for every optimal dual $f$ and apply it to a face point attaining
+$\|y^* - p\|_0$.
+
+\emph{(a) Zero-current firings are terminal.} If $(a,b)$ fires while $v_b = 0$,
+then afterwards $u_a = w_{ab}$, and every later pair $(a, b')$ has $w_{ab'} \le w_{ab} \le u_a$
+with $u_a$ non-decreasing, so it cannot fire. Hence each row hosts at most one such firing, and it
+is that row's last. \emph{(b) Complementary slackness.} If $v^*_b > 0$ then $b$ is matched in $M$,
+say to row $r(b)$, with $u^*_{r(b)} + v^*_b = w_{r(b),b}$; symmetrically for rows.
+\emph{(c) First firers are low.} If an aligned column $b$ is first fired via $(a', b)$, then
+$v_b = v^*_b$ there, and $w_{a'b} - u_{a'} - v^*_b > 0$ with feasibility
+$w_{a'b} \le u^*_{a'} + v^*_b$ force $u_{a'} < u^*_{a'}$ at that moment.
+\emph{(d) Aligned rows never fire $f$-zero columns.} If $p_a = u^*_a$ then $u_a \ge u^*_a$
+throughout, and any column with $v^*_b = 0$ has $w_{ab} \le u^*_a \le u_a$, residual $\le 0$.
+
+\emph{Charging: $D(f) \le 2|A|$.} Give each row $a$ two slots. $S_1(a)$ is filled if $a$ is
+damaged, or if $a$ is the first firer of a damaged column with $v^*_b = 0$; by (d) these cases
+exclude each other, and by (a) distinct such columns have distinct first firers. $S_2(a)$ is
+filled if $a$'s $M$-partner is an aligned, damaged column with $v^*_b > 0$; by (b) every such
+column is matched, and since $M$ is a matching this is injective. Every damaged coordinate fills
+a distinct slot, so $D(f) \le 2|A|$.
+
+\emph{Refinement: not all $2|A|$ slots can fill.} Suppose they all do. Then every row is either
+damaged (aligned, $u_a \ge u^*_a$ throughout, never low: an \emph{H-row}) or the first firer of a
+damaged $f$-zero column (an \emph{L-row}), exclusively; and every row's $M$-partner $c_a$ is an
+aligned, positive, damaged column. An L-row $\ell$ fires its zero column $z_\ell$ last, and there
+$u_\ell < w_{\ell z_\ell} \le u^*_\ell$ (feasibility at $v^*_{z_\ell} = 0$), so $\ell$ is low at
+all times up to that firing. The set $L$ of L-rows is nonempty: any filled $S_2$ names a damaged
+aligned positive column, whose first firer is low by (c), hence not an H-row. Let $g(a)$ be the
+first firer of $c_a$; by (c), $g$ maps into $L$.
+
+$g(\ell) \ne \ell$ for $\ell \in L$: if $\ell$ first fired $c_\ell$ itself, tightness (b) makes
+that residual $u^*_\ell - u_\ell$, so afterwards $u_\ell = u^*_\ell$; the pair $(\ell, z_\ell)$
+has weight $w_{\ell z_\ell} \le u^*_\ell < u^*_\ell + v^*_{c_\ell} = w_{\ell c_\ell}$, so it is
+processed strictly later, and its residual there is $\le 0$, contradicting that $\ell$ zero-fires
+(the zero-firing cannot come first, since it is terminal). So $g$ is fixed-point-free on the nonempty
+finite set $L$; iterating yields a cycle
+$\rho_1 \mapsto \rho_2 \mapsto \dots \mapsto \rho_m \mapsto \rho_1$ with $m \ge 2$. Consider an
+edge $\rho \mapsto \tau = g(\rho)$. The pair $(\rho, c_\rho)$ has weight
+$w_{\rho c_\rho} = u^*_\rho + v^*_{c_\rho} > u^*_\rho \ge w_{\rho z_\rho}$, so it strictly
+precedes $\rho$'s zero pair, and $\rho$ is still low there; were $c_\rho$ then untouched, $\rho$
+would fire it and be its own first firer. Hence $\tau$'s first firing of $c_\rho$ strictly
+precedes the pair $(\rho, c_\rho)$, which in a weakly-descending scan forces
+$w_{\tau c_\rho} \ge w_{\rho c_\rho}$; with feasibility
+$w_{\tau c_\rho} \le u^*_\tau + v^*_{c_\rho}$ and tightness
+$w_{\rho c_\rho} = u^*_\rho + v^*_{c_\rho}$ this gives $u^*_\tau \ge u^*_\rho$. Around the cycle
+all these hold with equality, so $w_{\tau c_\rho} = u^*_\tau + v^*_{c_\rho}$: $\tau$'s first
+firing of $c_\rho$ has residual $u^*_\tau - u_\tau$ and sets $u_\tau = u^*_\tau$, after which
+$\tau$'s strictly later zero pair cannot fire, contradicting $\tau \in L$.
+So the slots cannot all fill, and $D(f) \le 2|A| - 1$.
+
+\emph{Transpose.} The operator and every step above are symmetric in the two sides, and a
+weakly-descending order remains weakly descending under transposition, so also
+$D(f) \le 2|B| - 1$. The argument used
+only that values never decrease, each pair is processed once, weak descent, feasibility, and
+complementary slackness; neither integrality nor the tie-break enters.
+\end{proof}
+
+\subsection{The balanced family}
+
+Throughout, $\mathcal{B}_n$, the dual $f = (u^* \mid v^*)$ and the prediction $\hat y = f - n\,e_{a_1}$
+are as in Definition~\ref{def:balancedfam}.
+
+\begin{lemma}[The optimal face of $\mathcal{B}_n$]\label{lem:balancedface}
+$\opt(\mathcal{B}_n) = n^2$, and the optimal face is the triangle
+\[
+  F \;=\; \bigl\{\, f(m,\gamma) \;:\; m \ge 0,\ \gamma \ge 0,\ m + \gamma \le 1 \,\bigr\},
+\]
+\[
+  f(m,\gamma) \;=\; \bigl(n - m,\ \gamma, \dots, \gamma \;\big|\; 2(n-1) - \gamma,\ \dots,\ 2 - \gamma,\ m\bigr),
+\]
+that is, $f(m,\gamma)_{a_1} = n - m$, $f(m,\gamma)_{a_i} = \gamma$ for $i \ge 2$, $f(m,\gamma)_{b_k} = 2(n-k) - \gamma$ for $k < n$, and $f(m,\gamma)_{b_n} = m$. Its vertices are $f = f(0,0)$, $f(1,0)$ and $f(0,1)$, and these are its only integral points.
+\end{lemma}
+\begin{proof}
+$f \ge 0$ is feasible: for $i \ge 2$, $u^*_{a_i} + v^*_{b_k} = 2(n-k) = w_{a_i b_k}$, and
+$u^*_{a_1} + v^*_{b_k} = 3n-2k \ge 2n-k$ because $k \le n$. Its value is $n + \sum_k 2(n-k) = n^2$,
+and the matching $M = \{(a_1,b_n)\} \cup \{(a_i,b_{i-1})\}_{i \ge 2}$ has weight $n + n(n-1) = n^2$,
+so $\opt = n^2$ and $f$ is optimal.
+
+Now let $y = (u \mid v)$ be any optimal dual and write $m = n - u_{a_1}$, $\gamma_i = u_{a_i}$ for
+$i \ge 2$, $\Gamma = \sum_{i \ge 2} \gamma_i$, and $\beta_k = v_{b_k} - 2(n-k)$. Optimality and
+feasibility give the following.
+\begin{itemize}
+\item[(S)] $-m + \Gamma + \sum_k \beta_k = 0$, since $y$ and $f$ both have value $\opt$.
+\item[(P)] $u \ge 0$ and $v \ge 0$; its row half is (N) $\gamma_i \ge 0$.
+\item[(T$_i$)] $\gamma_i + \beta_k \ge 0$ for $i \ge 2$ and every $k$: feasibility where $f$ is
+  tight.
+\item[(T$_1$)] $\beta_k \ge k - n + m$: feasibility at $(a_1, b_k)$.
+\end{itemize}
+By (T$_1$) at $k = n$, $\beta_n \ge m$, so (S) gives $\sum_{k<n} \beta_k = m - \Gamma - \beta_n \le
+-\Gamma$. By (T$_i$) at a row $i$ of minimum $\gamma_i$, $\beta_k \ge -\min_i \gamma_i$ for every
+$k$, so $\sum_{k<n} \beta_k \ge -(n-1)\min_i \gamma_i \ge -\Gamma$. Hence equality holds throughout:
+the $\gamma_i$ share a common value $\gamma$, $\beta_k = -\gamma$ for every $k < n$, and
+$\beta_n = m$.
+
+Three constraints remain: $\gamma \ge 0$ from (N), $m \ge 0$ from $v_{b_n} \ge 0$ in (P), and
+$m + \gamma \le 1$ from (T$_1$) at $k = n-1$. The other $k < n$ in (T$_1$) are
+weaker, and the rest of (P) and of (T$_i$) follow from these three and $n \ge 2$. Conversely, every
+$f(m,\gamma)$ with $m, \gamma \ge 0$ and $m + \gamma \le 1$ is feasible. After the substitution,
+(T$_i$) reads $0 \ge 0$ and $\gamma + m \ge 0$, (T$_1$) reads $m + \gamma \le n - k$, and (P)
+follows from $m + \gamma \le 1$. Each such $f(m,\gamma)$ has value
+$n - m + (n-1)\gamma + \sum_{k<n}\bigl(2(n-k) - \gamma\bigr) + m = n^2$. The coordinates of
+$f(m,\gamma)$ are integral exactly when $m$ and $\gamma$ are, which on the triangle leaves its
+three vertices.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:balancedlb}]
+\emph{Step 1: $\opt = n^2$ and $f$ is optimal.} This is Lemma~\ref{lem:balancedface}.
+
+\emph{Step 2: $\|y^*-\hat y\|_0 = 1$.} $\hat y$ differs from $f$ in one coordinate, and it is not
+on the face, since it is infeasible: $\hat y_{a_1} + \hat y_{b_1} = 2n-2 < 2n-1 = w_{a_1 b_1}$.
+
+\emph{Step 3: every weakly-descending order gives the same output.} Coordinates never decrease, so
+$y_{b_k} \ge 2(n-k)$ throughout; hence for $i \ge 2$ the residual at $(a_i,b_k)$ is at most
+$2(n-k) - 0 - 2(n-k) = 0$ and rows $a_2,\dots,a_n$ never fire. So $y_{a_1}$ moves only in row $a_1$
+and $y_{b_k}$ only at $(a_1,b_k)$. The weights $w_{a_1 b_k} = 2n-k$ are strictly decreasing
+in $k$, so every weakly-descending order processes $(a_1,b_1),\dots,(a_1,b_n)$ in that relative
+order; no tie-break can reorder them. By induction, when $(a_1,b_k)$ is reached $y_{a_1} = k-1$
+and $y_{b_k} = 2(n-k)$, so the residual is $(2n-k)-(k-1)-(2n-2k) = 1 > 0$: it fires, leaving
+$y_{a_1} = k$ and $y_{b_k} = 2(n-k)+1$. The output is $q$ with $q_{a_1} = n$, $q_{a_i} = 0$ and
+$q_{b_k} = 2(n-k)+1$.
+
+\emph{Step 4: $\|y^*-q\|_0 = n$.} By Lemma~\ref{lem:balancedface} every face point is some
+$f(m,\gamma)$ with $m, \gamma \ge 0$, $m + \gamma \le 1$, and
+\[
+  q - f(m,\gamma) \;=\; \bigl(m,\ -\gamma, \dots, -\gamma \;\big|\; 1+\gamma,\ \dots,\ 1+\gamma,\ 1-m\bigr).
+\]
+The $n-1$ columns $b_k$ with $k < n$ always differ, as $1 + \gamma \ge 1$; the rows $a_i$ with
+$i \ge 2$ differ exactly when $\gamma \ne 0$; and $a_1$ and $b_n$ differ exactly when $m \ne 0$ and
+$m \ne 1$ respectively, at least one of which holds. So $\mathrm{ham}(q, f(m,\gamma)) \ge (n-1) + 1
+= n$, with equality at $\gamma = 0$ and $m \in \{0, 1\}$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:noadditive}]
+By Theorem~\ref{thm:balancedlb}, for every $n \ge 2$ the instance $\mathcal{B}_n$ has
+$\min(|A|,|B|) = n$, a prediction at face distance $1$, and an output at face distance $n$ under
+every weakly-descending order. That is an increase of $n - 1 = \min(|A|,|B|) - 1$, so no
+additive term below $\min(|A|,|B|) - 1$ is valid, and the optimal constant on balanced $n \times n$
+instances is at least $n - 1$. The upper end $2n - 1$ is the additive term of
+Theorem~\ref{thm:sharpwarm} at $\min(|A|,|B|) = n$.
+\end{proof}
+
+\begin{remark}[A balanced companion to Theorem~\ref{thm:order}]\label{rem:balancedorder}
+On $\mathcal{B}_n$ the weakly-increasing scan fires exactly once, at $(a_1,b_n)$ with residual
+$n$, and ends at $q' = f + n\,e_{b_n}$, at face distance $1$. So in $\ell_0$ the two orders end at
+$n$ versus $1$ while agreeing on the gap and both $\ell_1$ distances, as in Theorem~\ref{thm:order}: both
+outputs have dual gap $n$, realised $\ell_1$ displacement $2n$, and $\ell_1$ distance $n$ to the
+optimal face. The $\ell_\infty$ reversal of Section~\ref{sec:delicate} (Appendix~\ref{app:order})
+recurs here: the descending output lies at $\ell_\infty$ distance $1$ from the face, the increasing
+output at $n-1$. By Lemma~\ref{lem:balancedface}, $q - f(m,\gamma)$ has sup norm $1 + \gamma$,
+minimised at $\gamma = 0$, while
+$q' - f(m,\gamma) = (m, -\gamma, \dots, -\gamma \mid \gamma, \dots, \gamma, n-m)$ has sup norm
+$n - m \ge n - 1$, attained at $m = 1$. The same two minima hold in $\ell_\infty^\pm$ in covering
+coordinates, where the values are $1 + 2\gamma$ and $n - m + \gamma$; in the difference coordinates
+of \citet{sakaue2022} the increasing output is at $n$ and the descending one at $1$, so the reversal
+persists. For $n \ge 3$ the $\ell_\infty$ ranking is therefore strict and again reverses the
+$\ell_0$ one. Theorem~\ref{thm:order} has $|A| = 1$ and the forward scan loses, while $\mathcal{B}_n$ is balanced
+and the sorted scan loses. Neither order is always better, so $\mathcal{B}_n$ is not a lower bound
+over all orders. No order is additive on covering instances (Theorem~\ref{thm:noadditiveclass}), but
+a data-dependent order, the cover-directed scan, stays within twice the prediction's $\ell_0$ error
+(Theorem~\ref{thm:coverscan}).
+\end{remark}
+
+\paragraph{Transfer to the packing orientation.} \citet[Thm.~3.2]{chen2022} work in the packing
+orientation, and not everything transfers to it. Under $z_i = T - y_i$ and $c_{ab} = 2T - w_{ab}$ a
+covering system becomes a packing one. The map is a coordinatewise bijection, hence an $\ell_0$
+isometry, and it carries residuals to excesses. Non-negative predictions, such as that of
+$\mathcal{B}_n$, leave the clamp of Definition~\ref{def:greedy} inert. On them $\repair_\sigma$ is
+therefore carried exactly onto the packing mirror, and a weakly-descending weight order becomes a
+weakly-ascending capacity one. $\mathcal{B}_n$ is balanced with a perfect optimal matching, so its
+image is a minimum-cost perfect-matching instance, and the balanced lower bound of
+Theorem~\ref{thm:balancedlb} carries over to the packing orientation.
+
+The perfect-matching dual has no non-negativity constraint, and dropping it changes neither $\opt$
+nor the two face distances. The perfect matching of Lemma~\ref{lem:balancedface} still certifies
+$\opt = n^2$. That lemma's proof reaches $\gamma_i = \gamma$, $\beta_k = -\gamma$ for $k < n$ and
+$\beta_n = m$ without (P), so the face becomes the unbounded strip
+$\{f(m,\gamma) : m, \gamma \in \R,\ 0 \le m + \gamma \le 1\}$, which still contains $f$. In Step~4
+of the proof of Theorem~\ref{thm:balancedlb}, the rows $a_i$, $i \ge 2$, agree with $q$ only at
+$\gamma = 0$ and the columns $b_k$, $k < n$, only at $\gamma = -1$. So at least $n - 1$ of them
+differ, and $a_1$, $b_n$ add at least one more. Equality holds at $f$, which is still on the face,
+and $\hat y$ stays at distance $1$.
+
+The family of Theorem~\ref{thm:order} does not transfer: with $|A| = 1$ and $|B| = d \ge 2$ it has
+no perfect matching.
+
+\subsection{Sharpness in the unbalanced regime}
+
+In the unbalanced regime the additive constant of Theorem~\ref{thm:sharpwarm} cannot be lowered for
+any value of $\min(|A|,|B|)$, as the following family shows.
+\begin{definition}[The extremal family $\mathcal{F}_k$]\label{def:sharpfam}
+Fix $k \ge 1$, put $M = 4k+2$ and $s = 2k+1$, and for $1 \le i \le k-1$ put
+\[
+  p_i = M - 2i - 1,\qquad q_i = M - 2i - 2,\qquad h_i = 2i+1,\qquad \ell_i = 2i .
+\]
+$\mathcal{F}_k$ has $A = \{0,1,\dots,k-1\}$ (row $0$ the \emph{hub}, the rest \emph{spokes}) and
+$3k+2$ columns
+\[
+  X_1,\; X_2,\; L_1, \dots, L_{k-1},\; Z_0,\; H_1, Z_1, \dots, H_{k-1}, Z_{k-1},\; P_1,\; P_2 .
+\]
+All weights are $0$ except
+\begin{gather*}
+  w_{0X_1} = M,\quad w_{0X_2} = M-1,\quad w_{0Z_0} = s,\\
+  w_{0L_i} = p_i,\quad w_{iL_i} = q_i,\quad w_{iH_i} = h_i,\quad w_{iZ_i} = \ell_i ,
+\end{gather*}
+so the padding columns $P_1, P_2$ carry no positive weight. The prediction is
+$\hat y_0 = 0$, $\hat y_i = \ell_i - 1$, $\hat y_{X_1} = M$, $\hat y_{X_2} = M-1$,
+$\hat y_{L_i} = q_i - h_i$, $\hat y_{H_i} = 2$, and $0$ on every $Z$ and $P$. So
+$\min(|A|,|B|) = k$, $\bigl||B|-|A|\bigr| = 2k+2$ and $\opt = 3k^2 + k + 2$.
+\end{definition}
+
+\begin{proposition}[The constant is attained at every $\min(|A|,|B|)$]\label{prop:sharpattained}
+For every $k \ge 1$, on $\mathcal{F}_k$ and under \emph{every} weakly-descending scan order,
+\[
+  \|y^* - \hat y\|_0 = 2k+1, \qquad \|y^* - \repair_{\downarrow}(\hat y)\|_0 = 4k ,
+\]
+both minima over the optimal face; hence
+$\|y^* - \repair_{\downarrow}(\hat y)\|_0 = \|y^* - \hat y\|_0 + 2\min(|A|,|B|) - 1$. Also,
+$2k+1 < 2k+2 = \bigl||B|-|A|\bigr|$ and $4k < 4k+2 = |A|+|B|$: the family lies where the bound
+has content, and the additive term of the minimum binds.
+\end{proposition}
+
+\begin{proof}
+Write $g_0 = 0$ and $g_i = h_i + 1 = 2i+2$.
+
+\emph{The order is unique.} The positive weights are $M$, $M-1$, the odd $p_i \in \{2k+3,\dots,4k-1\}$,
+the even $q_i \in \{2k+2,\dots,4k-2\}$, the odd $s = 2k+1$, the odd $h_i \in \{3,\dots,2k-1\}$ and the
+even $\ell_i \in \{2,\dots,2k-2\}$: six pairwise disjoint sets, so all positive weights are
+distinct. A pair of weight $0$ has residual $-y_a - y_b \le 0$ throughout and never fires. So every
+weakly-descending order induces the same firings and $\repair_\downarrow(\hat y)$ is tie-break
+independent.
+
+\emph{The optimal face.} Feasibility on $\{0,X_1\}$ and on each $\{i, L_i\}$ gives
+$\sum_V y \ge M + \sum_i q_i$, and the matching $\{(0,X_1)\} \cup \{(i,L_i)\}$ attains it using the
+largest entry of every row, so $\opt = M + \sum_i q_i = 3k^2+k+2$. Equality forces
+$y_{X_2} = y_{Z_0} = y_{H_i} = y_{Z_i} = y_{P_j} = 0$ and both groups tight; then $y_0 \ge M-1$ and
+$y_i \ge h_i$, while $y_0 + y_{L_i} \ge p_i$ holds automatically as
+$y_i \le q_i \le 4k-2 < 4k+1 \le y_0$. So
+\[
+  F = \bigl\{\, y_0 \in [M-1, M],\; y_{X_1} = M - y_0,\;
+      y_i \in [h_i, q_i],\; y_{L_i} = q_i - y_i,\; y \equiv 0 \text{ elsewhere} \,\bigr\},
+\]
+the full, possibly fractional, face.
+
+\emph{Before the repair.} Every $y \in F$ disagrees with $\hat y$ at $y_0$ ($y_0 \ge M-1 > 0$), at
+$y_{X_1}$ ($\le 1 < M$), at $y_{X_2}$ ($0 \ne M-1$), at each $y_i$ ($y_i \ge h_i > \ell_i - 1$) and
+at each $y_{H_i}$ ($0 \ne 2$): $2k+1$ forced disagreements. The point with $y_0 = M$, $y_i = h_i$
+agrees on the other $2k+1$ coordinates, so $\|y^* - \hat y\|_0 = 2k+1$.
+
+\emph{The scan fires exactly $2k-1$ times.} $(0,X_1)$ and $(0,X_2)$ come first and are tight
+at $\hat y$, so they never fire, and $y_0$ only increases. Since
+$p_1 > \dots > p_{k-1} > s$, the pairs $(0,L_i)$ are processed in increasing $i$ before $(0,Z_0)$;
+inductively $(0,L_i)$ meets $y_0 = g_{i-1}$, $y_{L_i} = q_i - h_i$ and fires with residual
+$g_i - g_{i-1} > 0$. The pair $(i,L_i)$, of smaller weight $q_i < p_i$, is then slack. Next
+$(0,Z_0)$ is reached with $y_0 = g_{k-1}$ (that is, $2k$ for $k \ge 2$, and $g_0 = 0$ for
+$k = 1$) and fires with residual $s - g_{k-1} \ge 1$. On a spoke, $(i,H_i)$ precedes $(i,Z_i)$ and
+is tight at $\hat y$, so only $(i,Z_i)$ fires, with residual $1$.
+Every other pair has weight $0$. So the firings are exactly
+$(0,L_1),\dots,(0,L_{k-1}),(0,Z_0),(1,Z_1),\dots,(k-1,Z_{k-1})$: $2k-1$ of them.
+
+\emph{After the repair.} The $2k+1$ coordinates already off the face stay off:
+$X_1, X_2, H_i$ are untouched and $y_0$ ends at $s = 2k+1 < M-1$, $y_i$ at $\ell_i < h_i$. Each of
+the $2k-1$ damaged coordinates is now off too: $y_{Z_0} = s - g_{k-1} > 0$, $y_{Z_i} = 1 \ne 0$ and
+$y_{L_i} > q_i - h_i \ge q_i - y_i$ for every $y \in F$. Only $P_1, P_2$ still agree, so
+$\|y^* - \repair_\downarrow(\hat y)\|_0 = (4k+2) - 2 = 4k$.
+\end{proof}
+
+We also verify $\mathcal{F}_k$ by computer (Appendix~\ref{app:repro}): through
+$\min(|A|,|B|) = 12$ by exact minimisation of the Hamming distance over the full, possibly
+fractional optimal face, and independently through $\min(|A|,|B|) = 5$ by brute-force enumeration
+of the integral face. The two agree at every $k$ where both run, as the total unimodularity
+argument of Appendix~\ref{app:early} requires.
+
+\begin{remark}[Large prediction errors]
+The warm-start bounds are additive in the prediction's $\ell_0$ error, so they help only when that
+error is small. A $\hat{y}$ drawn uniformly at
+random is far from the optimal face in $\ell_0$ to begin with; $\repair_\downarrow$ inherits that
+distance, and the post-repair face distance grows with the instance. None of these bounds promises
+$\ell_0$ sparsity that the prediction lacks.
+\end{remark}

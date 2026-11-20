@@ -1,0 +1,601 @@
+% The abstract and Sections 1 to 8 of the New In ML 2026 camera-ready paper.
+% The appendix labels used here are defined in the three appendix files.
+
+\begin{abstract}
+Warm-starting a matching solver from a predicted dual has three steps: predict, repair the
+prediction to feasibility, and solve. Runtime bounds in this line of work grow with the repaired
+dual's error in $\ell_1$, $\ell_\infty$ or $\ell_0$, so the repair must be analysed in the norm the bound
+uses. The standard two-sided greedy repair, which raises both endpoints of a violated constraint
+by the full residual, is a non-expansion onto the feasible set in every $\ell_p$ norm, toward
+every feasible point, for pairwise covering and packing systems. Its $\ell_2$ case is classical
+(relaxation method). Routing \mbox{Dinitz et al.}'s movement lemma through the post-repair gap
+tightens their end-to-end constant from $3$ to $1$. Two natural alternatives have no finite
+$\ell_1$ expansion constant. In $\ell_0$, the number of wrong coordinates, the repair is
+order-dependent: two scan orders with identical $\ell_1$ guarantees end $d$ versus $1$ coordinates
+from the nearest optimal dual. Sorting by decreasing weight gives an additive
+$2\min(|A|,|B|)-1$ bound that is vacuous on balanced instances, where the sorted scan has no
+additive constant. A scan directed by a minimum vertex cover of the violated constraints takes an
+infeasible integral prediction to a feasible dual within twice its own $\ell_0$ error in
+$O(m\sqrt{n})$ time, so \mbox{Chen et al.}'s $\ell_0$-parameterised runtime holds from an infeasible prediction.
+A one-sided walk, our covering transplant of Algorithm~1 of \mbox{Dinitz et al.}, has the same
+factor and the lowest post-repair $\ell_0$ error we report, but it is not $\ell_1$-non-expansive. We
+count solver operations, not wall-clock time. Code: \coderepo.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+Algorithms with predictions~\citep{lykouris2021,mitzenmacher2022} ask for guarantees that degrade
+gracefully with prediction quality. A line of work opened by \citet{dinitz2021} uses predictions
+to improve \emph{running times}: given a prediction $\hat{y}$ of an optimal LP dual, seed a
+primal--dual algorithm and bound the work by the prediction error. Every method in this line
+predicts $\hat y$, repairs it to a feasible $\hat y'$ and warm-starts from $\hat y'$. Each paper
+makes this split explicit and matches its repair to its runtime parameter: an $\ell_1$ repair for
+an $\ell_1$ bound~\citep{dinitz2021}, an $\ell_\infty$-projection for an $\ell_\infty$
+one~\citep{sakaue2023}, a flow projection for a flow-$\ell_1$ bound~\citep{davies2023}; see also
+min-cost flow~\citep{chenyao2026} and online minimisation~\citep{coester2026}.
+
+We know of no $\ell_0$ bound on the repair step in this line. The
+$\ell_0$-parameterised runtime bound of \citet{chen2022} needs the line's mildest condition to
+improve on the classical algorithm: $\|y^*-\hat y'\|_0 = o(n)$, where its $\ell_1$
+predecessor needed $o(\sqrt{n})$. It is proved for a \emph{feasible} input
+\citep[Thm.~3.2]{chen2022}. The informal statement \citep[Thm.~1.1]{chen2022} reads ``given a
+weighted bipartite graph and predicted dual $\hat y$'', with runtime in the prediction's own
+$\|y^* - \hat y\|_0$, and making it formal needs an $\ell_0$ bound on the repair step.
+Theorem~\ref{thm:composed} supplies one, with factor~$2$, in $O(m\sqrt{n})$ time.
+
+$\ell_0$ counts wrong coordinates, so nudging many prices slightly is cheap in $\ell_1$ but expensive in
+$\ell_0$. Figure~\ref{fig:star} shows two orders of one repair that agree on the gap and both $\ell_1$
+distances but end $4$ and $1$ coordinates from the nearest optimal dual.
+
+\paragraph{Contributions (Table~\ref{tab:ops}).}
+\begin{itemize}\setlength{\itemsep}{0pt}
+\item \textbf{(T1)} The two-sided greedy repair is a non-expansion onto the feasible set in every
+$\ell_p$, toward every feasible point, for covering and packing systems (Thms.~\ref{thm:nonexp},
+\ref{thm:pack}). Routing \citeauthor{dinitz2021}'s movement lemma through the post-repair gap
+tightens their end-to-end constant from $3$ to $1$.
+\item \textbf{(T2)} Two natural alternatives have no finite $\ell_1$ expansion constant
+(Proposition~\ref{prop:fail}).
+\item \textbf{(T3)} Two scan orders end $d$ versus $1$ coordinates from the face while agreeing on
+the gap and both $\ell_1$ distances; $\ell_\infty$ ranks them backwards for $d \ge 3$
+(Theorem~\ref{thm:order}).
+\item \textbf{(T4)} Sorting gives an additive bound $2\min(|A|,|B|)-1$ that is vacuous on balanced
+instances, where a prediction at face distance $1$ can end at $n$ (Thms.~\ref{thm:sharpwarm},
+\ref{thm:balancedlb}). We also determine its cold-start worst case
+exactly (Theorem~\ref{thm:coldfivehalves}).\footnote{The reviewed version routed the composition through the sorted scan and conjectured a
+cold-start bound of $2\min(|A|,|B|)$, refuted in Section~\ref{sec:sorted}; Section~\ref{sec:composition} is new.}
+\item \textbf{(T5)} An $O(m\sqrt{n})$-time repair of an infeasible integral prediction ends within
+twice the prediction's own $\ell_0$ error of every optimal dual, so \citeauthor{chen2022}'s $o(n)$
+threshold holds in that error (Theorem~\ref{thm:composed}). It is the packing mirror of our
+cover-directed scan over a minimum vertex cover of the violated constraints. On covering instances (not their setting) no $\ell_1$-non-expansive repair is
+$\ell_0$-additive, so a factor is the right form of bound there, and our covering transplant of
+\citeauthor{dinitz2021}'s walk has the same factor~$2$ (Proposition~\ref{prop:walkbound}).
+\item \textbf{(E)} The walk has the lowest post-repair $\ell_0$ error we report; the cover-directed scan
+is within one coordinate of the prediction's error in every cell mean.
+\end{itemize}
+
+The cited theorems are correct as stated; our $\ell_0$ results concern the repair step.
+
+\begin{table}[t]
+\centering
+\caption{Repairs and what is known about them (pre $=\|y^*-\hat y\|_0$; distances are minima over
+the optimal face). The walk is our covering transplant of Algorithm~1 of \citet{dinitz2021}; its
+$\ell_0$ entries are our analysis, and that paper's bounds are untouched. Lower
+bounds and tightness are proved on covering instances; for the packing mirror scan
+(Thm.~\ref{thm:composed}) we claim only its upper bound. Appendix~\ref{app:delicate}'s full map
+adds the uniform shift (Section~\ref{sec:prelim}), the $\ell_1$-nearest face point and the two
+alternatives of Proposition~\ref{prop:fail}.}
+\label{tab:ops}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l l p{6.1cm}@{}}
+\toprule
+Repair & $\ell_1$ toward feasible points & worst-case post-repair $\ell_0$\\
+\midrule
+Two-sided greedy $\repair_\sigma$ & non-expansive, every $\ell_p$ (Thm.~\ref{thm:nonexp}) & no additive constant under any order (Thm.~\ref{thm:noadditiveclass})\\
+\quad forward (index order) & same & $d$ from $1$ (Thm.~\ref{thm:order})\\
+\quad sorted (by weight) & same & $\le$ pre${}+2\min(|A|,|B|)-1$ (Thm.~\ref{thm:sharpwarm}), vacuous when $|A|=|B|$; $n$ from $1$ on $\mathcal{B}_n$ (Thm.~\ref{thm:balancedlb})\\
+\quad cover-directed & same & $\le$ pre${}+\tau(G(p)) \le 2\,$pre, tight in the limit for some cover and order (Thm.~\ref{thm:coverscan}, Prop.~\ref{prop:chainfam}); its packing mirror composes (Thm.~\ref{thm:composed})\\
+One-sided walk &\begin{tabular}[t]{@{}l@{}}\emph{not} non-expansive (Sec.~\ref{sec:exp});\\ their bounds: movement $\le 2\|\hat y{-}y^*\|_1$,\\ distance $\le 3\|\hat y{-}y^*\|_1$\end{tabular} & $\le$ pre${}+\tau(G(p)) \le 2\,$pre under every tie-break, tight in the limit (Props.~\ref{prop:walkbound}, \ref{prop:ladderfam}); lowest in Table~\ref{tab:measure}(a)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Preliminaries}\label{sec:prelim}
+
+Let $V$ be a finite index set and $\mathcal{C}$ a set of constraints $y_i + y_j \ge w_{ij}$, with
+$w \in \Z_{\ge 0}$ and $i \ne j$; $\dfeas = \{ y \in \R^V_{\ge 0} : y_i + y_j \ge w_{ij}\
+\forall (i,j) \in \mathcal{C}\}$ ($y_i$ is a price). $V = A \sqcup B$, $\mathcal{C} = A \times B$
+gives the dual of maximum-weight bipartite matching, of value $\opt$ and dual gap
+$g(y) = \sum_i y_i - \opt$; general $\mathcal{C}$ gives weighted vertex cover. Symmetrically, the
+packing system $y_i + y_j \le c_{ij}$ with $\sum_i y_i$ maximised is the polytope of
+\citet{dinitz2021}. It is the dual of minimum-cost perfect matching and the orientation of
+\citet[Thm.~3.2]{chen2022}; there $g(y) = \opt - \sum_i y_i$.
+Besides $\ell_p$ we use $\|x\|_\infty^\pm = \max_i \max\{0, x_i\} + \max_i \max\{0, -x_i\}$
+\citep{sakaue2022}, with $\|x\|_\infty \le \|x\|_\infty^\pm \le 2\|x\|_\infty$, and the Hamming
+distance $\|x - y\|_0$, the number of wrong coordinates. Since $\|x - y\|_0 \le |V|$, an $\ell_0$
+bound has content only below the coordinate count, which is $|V| = 2n$ on a balanced $n \times n$
+instance. Optimal duals are generically non-unique, so following \citet{sakaue2023} every distance
+to $y^*$ in Sections~\ref{sec:nonexp}--\ref{sec:composition} is a minimum over the full optimal
+face, that is, the distance to the nearest optimal dual, except where a bound is stated for a fixed
+optimal dual, as in the composition results of Section~\ref{sec:composition}.\footnote{By total unimodularity, integral face
+points suffice for $\ell_0$ and $\ell_1$ on bipartite systems (Appendix~\ref{app:early}).}
+Section~\ref{sec:exp} instead measures every repair against the perturbed reference optimum, which
+gives an upper bound.
+
+\begin{definition}[Two-sided greedy repair]\label{def:greedy}
+Fix an order $\sigma$ on $\mathcal{C}$. Set $y \leftarrow \max(\hat{y}, 0)$, then scan the
+constraints in order $\sigma$; whenever $y_i + y_j < w_{ij}$, increase \emph{both} $y_i$ and $y_j$ by
+the \emph{full} residual $w_{ij} - y_i - y_j$. Call the output $\repair_\sigma(\hat{y})$.
+\end{definition}
+
+Coordinates only increase, so no satisfied constraint is re-violated. One pass suffices, and the
+output is integral (for integral $\hat{y}$), non-negative and feasible, at cost $O(|\mathcal{C}|)$.
+The packing mirror decreases both endpoints by the full excess.
+
+\emph{The walk} is our covering transplant of Algorithm~1 of \citet{dinitz2021}, a one-sided repair
+with residuals fixed at their initial values (Proposition~\ref{prop:walkbound}). \emph{The uniform
+shift} is our covering transplant of the $\ell_\infty^\pm$-projection of
+\citet{sakaue2022,sakaue2023}: it raises every coordinate of the clamped prediction by half the
+largest residual and rounds up (rounding up is ours). The \emph{endpoint shift} raises only the
+endpoints of violated constraints in the same way.
+
+\paragraph{Not a new algorithm.} $\repair_\sigma$ is a raise rule in the local-ratio /
+primal--dual style of \citet{baryehuda1981,baryehuda1985}, applied to the
+covering system defining $\dfeas$ and initialised at $\max(\hat{y},0)$. Their algorithms address
+vertex-weighted, unit-demand vertex cover, so only the technique is shared.
+Local-ratio analyses judge raise rules by objective value (ratio~$2$ against $\opt$). We study a
+metric property of the repair instead, which ignores the objective.
+
+\section{The greedy repair is a non-expansion in every \texorpdfstring{$\ell_p$}{Lp} norm}\label{sec:nonexp}
+
+\begin{theorem}\label{thm:nonexp}
+For every $\hat{y}$, every order $\sigma$, every $y \in \dfeas$, and every $p \in [1,\infty]$,
+\[
+\|\repair_\sigma(\hat{y}) - y\|_p \;\le\; \|\max(\hat{y},0) - y\|_p .
+\]
+\end{theorem}
+
+\begin{proof}
+Since $y \ge 0$, clamping to $\max(\hat{y},0)$ is componentwise non-expansive toward any point of
+the non-negative orthant, so assume $\hat{y} \ge 0$. It suffices that each individual raise is
+non-expansive.
+Fix $p < \infty$ and consider a step at constraint $(i,j)$ with current iterate $z$ and residual
+$r = w_{ij} - z_i - z_j > 0$, sending $z_i \mapsto z_i + r$ and $z_j \mapsto z_j + r$. Write
+$s_i = y_i - z_i$ and $s_j = y_j - z_j$. Feasibility of $y$ at this single constraint gives
+\begin{equation}\label{eq:slack}
+s_i + s_j \;=\; (y_i + y_j) - (z_i + z_j) \;\ge\; w_{ij} - (z_i + z_j) \;=\; r .
+\end{equation}
+The change in $\|\cdot\|_p^p$ contributed by the two coordinates is $f(s_i) + f(s_j)$ where
+$f(s) = |s - r|^p - |s|^p$. Two elementary facts about $f$: it is non-increasing on $\R$ (for
+$t \mapsto |t|^p$ convex and $p \ge 1$, the increment $|s-r|^p - |s|^p$ decreases as $s$
+increases), and it is odd about $r/2$, $f(r - s) = |{-s}|^p - |r - s|^p = -f(s)$.
+By \eqref{eq:slack} we have $s_j \ge r - s_i$, so monotonicity gives $f(s_j) \le f(r - s_i)$, and
+therefore $f(s_i) + f(s_j) \le f(s_i) + f(r - s_i) = 0$.
+So no raise increases $\|\cdot\|_p^p$; composing over the scan gives the claim for $p < \infty$, and
+letting $p \to \infty$ gives $p = \infty$.
+\end{proof}
+
+\begin{corollary}[$\repair_\sigma$ is $1$-Lipschitz]\label{cor:lip}
+For every pair of predictions $x, x'$, every order $\sigma$ and every $p \in [1,\infty]$,
+$\|\repair_\sigma(x) - \repair_\sigma(x')\|_p \le \|\max(x,0) - \max(x',0)\|_p$.
+\end{corollary}
+
+The proof of Theorem~\ref{thm:nonexp} uses feasibility of $y$ only at the processed constraint, so
+no bipartiteness is needed. Corollary~\ref{cor:lip} (proof in Appendix~\ref{app:early}) applies one $\sigma$ to both
+inputs; data-dependent orders such as the cover-directed scan fall outside it. Since
+$\repair_\sigma$ leaves every feasible point unchanged, it is a non-expansive retraction onto $\dfeas$
+in every $\ell_p$.
+
+\begin{theorem}[Packing mirror]\label{thm:pack}
+For a packing system $y_i + y_j \le c_{ij}$, the operator that decreases both endpoints of a
+violated constraint by the full excess is likewise a non-expansion onto the feasible set in every
+$\ell_p$.
+\end{theorem}
+\noindent The proof is identical, with $s_i = z_i - y_i$, $s_j = z_j - y_j$ and excess
+$e = z_i + z_j - c_{ij}$; feasibility of $y$ gives $s_i + s_j \ge e$.
+
+\paragraph{Classical case.} The $\ell_2$ case of Theorem~\ref{thm:nonexp} is classical. A
+raise sends $(z_i,z_j)$ to ${(w_{ij}-z_j,\,w_{ij}-z_i)}$, one step of the relaxation
+method~\citep{agmon1954,motzkin1954} at parameter $2$, and Fej\'er monotonicity of relaxed
+projections~\citep{bauschke1996} gives non-expansion in $\ell_2$. That route is Euclidean and
+yields no other $p$. Our elementary argument gives every $\ell_p$ at once, toward every feasible
+point, and covers non-bipartite and packing systems and the Lipschitz bound of
+Corollary~\ref{cor:lip}. Our interest is in what the property costs in $\ell_0$
+(Section~\ref{sec:composition}).
+Order-preserving operators and tropical projection do not apply; isotonic regression is the
+closest precedent (Appendix~\ref{app:early}).
+
+\begin{corollary}\label{cor:gap}
+$g(\repair_\sigma(\hat{y})) \le \min_{y^*} \|\hat{y} - y^*\|_1$, the minimum over the optimal face.
+\end{corollary}
+\noindent Indeed $g(y') = \sum_i y'_i - \sum_i y^*_i \le \|y' - y^*\|_1 \le \|\hat{y} - y^*\|_1$ by
+the $p=1$ case, since $y^* \in \dfeas$.
+
+\begin{corollary}[Constant $3 \to 1$]\label{cor:dinitz}
+By \citet[Prop.~9 and Lemma~11]{dinitz2021},\footnote{Numbering as in their full version (arXiv:2107.09770v1).} each dual adjustment of the seeded scheme
+increases the dual value by at least one, so the iteration count is bounded by the post-repair gap
+$g(\hat{y}')$, the inequality from which their Lemma~12 derives an $\ell_1$ bound. For
+the repaired dual produced by their own Algorithm~1, $g(\hat{y}') \le \|\hat{y} - y^*\|_1$ (proof
+in Appendix~\ref{app:early}), rather than the $3\|\hat{y} - y^*\|_1$ obtained by routing through
+their Theorem~7.
+\end{corollary}
+
+Nothing in their pipeline changes; the $\ell_1$ prediction error a given iteration budget allows
+grows by a factor~$3$. The comparison holds only end to end: we reach their
+Algorithm~1 (a one-sided walk) through their Lemma~6 and do not identify it with
+Definition~\ref{def:greedy}.
+
+\section{Non-expansion is fragile, and results depend on the norm}\label{sec:delicate}
+
+\begin{proposition}\label{prop:fail}
+Neither of the following is an $\ell_1$ non-expansion onto the feasible set:
+\emph{(a)} the alternating (residuated-style) projection in the packing direction (with $y = (u \mid v)$ split by side: lower each
+$u_a$ to $\min_b(c_{ab} - v_b)$, then each $v_b$ likewise, to a fixpoint);
+\emph{(b)} the packing mirror of Definition~\ref{def:greedy} with the excess $e$ split between the
+two endpoints as evenly as integrality allows ($\lceil e/2 \rceil$ off the $A$-side,
+$\lfloor e/2 \rfloor$ off the $B$-side) instead of applied in full to each.
+Neither admits \emph{any} finite expansion constant: both expand $\ell_1$ distance to a feasible
+point by a factor that grows linearly in the number of coordinates.
+\end{proposition}
+
+For (b), on a $k \times 1$ instance with all capacities $0$ and $\hat y = (\mathbf 0 \mid 1)$ the split
+sends every $u_a$ to $-1$: $\ell_1$ distance $k+1$ to $y = 0$, against $1$. Raising both endpoints
+by $r/2$ is non-expansive but not integral, and an uneven split can expand; a common integral
+step, $r$ or $\lceil r/2 \rceil$, is both (Appendix~\ref{app:delicate}).
+
+\begin{theorem}\label{thm:order}
+For every $d \ge 2$ there is a covering instance with $|A| = 1$, $|B| = d$, and a prediction at
+$\ell_0$ distance $1$ from the optimal face, such that
+$\|\repair_{\mathrm{fwd}}(\hat{y}) - y^*\|_0 = d$ while
+$\|\repair_{\mathrm{rev}}(\hat{y}) - y^*\|_0 = 1$, and the two outputs agree on the gap and both
+$\ell_1$ distances:
+$g(\repair_{\mathrm{fwd}}(\hat{y})) = g(\repair_{\mathrm{rev}}(\hat{y})) = d$,
+$\|\repair_{\bullet}(\hat{y}) - \hat{y}\|_1 = 2d$ and
+$\min_{y^*}\|\repair_{\bullet}(\hat{y}) - y^*\|_1 = d$, the last also equal to the prediction's own
+$\ell_1$ distance to the face. $\ell_0$ and $\ell_1$ distances to $y^*$ are minima over the full
+optimal face.
+\end{theorem}
+
+\begin{figure}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+point on $S_4$ & $(y_a \mid y_{b_0}, y_{b_1}, y_{b_2}, y_{b_3})$ & wrong coordinates & $\ell_\infty$ to face\\
+\midrule
+prediction $\hat y$ (infeasible) & $(0 \mid 0,0,0,0)$ & $1$ & --\\
+forward output (lightest first) & $(4 \mid 1,1,1,1)$ & $4$ & $1$\\
+reverse = sorted output (heaviest first) & $(4 \mid 0,0,0,4)$ & $1$ & $3$\\
+\bottomrule
+\end{tabular}
+\caption{The running example $S_4$, the $d = 4$ case of Theorem~\ref{thm:order}: $w_{ab_k} = k+1$,
+$\hat y = 0$, $\opt = 4$, optimal face $\{(t \mid 0,0,0,4-t) : t \in [3,4]\}$. The outputs agree
+on the gap ($4$) and both $\ell_1$ distances (displacement $8$, face distance $4$;
+Table~\ref{tab:order}).}
+\label{fig:star}
+\end{figure}
+
+On the instance $w_{ab_k} = k+1$, $\hat y = 0$, the forward scan (index order, here lightest
+first) fires every constraint with residual $1$, and the reverse scan (heaviest first) fires once,
+with residual $d$. The forward output lies at $\ell_\infty$ face distance $1$ and the reverse at
+$d-1$. For $d \ge 3$ the $\ell_\infty$ ranking therefore reverses the $\ell_0$ one, as does the
+$\ell_\infty^\pm$ ranking (Appendix~\ref{app:order}), and a bound of the form of
+\citet[Prop.~2]{sakaue2022} would prefer the order an $\ell_0$ bound must avoid. We do not prove
+the reversal unavoidable, nor that no $\ell_1$-based analysis could separate the two orders. Here
+the reverse order is the sorted one; on the balanced family of Section~\ref{sec:sorted} the roles
+flip (Remark~\ref{rem:balancedorder}).
+
+The uniform shift is $\ell_\infty$-optimal among integral repairs, yet on an explicit star family
+every $\ell_\infty$-optimal integral output misses the face in all $|A|+|B|$ coordinates
+(Observation~\ref{obs:shift}).
+
+\section{The sorted scan: a partial \texorpdfstring{$\ell_0$}{l0} guarantee, vacuous on balanced instances}\label{sec:sorted}
+
+\begin{definition}[Sorted repair]\label{def:sorted}
+$\repair_{\downarrow}$ is Definition~\ref{def:greedy} with $\sigma$ ordering the constraints by
+\emph{decreasing} weight $w_{ij}$, under any weakly-descending tie-break.
+\end{definition}
+
+\begin{proposition}[Warm start, $|A| = 1$]\label{prop:sortedwarm}
+For every prediction $\hat{y}$ and every weakly-descending scan order,
+$\|y^* - \repair_{\downarrow}(\hat{y})\|_0 \le \|y^* - \hat{y}\|_0 + 1$,
+both measured to the optimal face, and the $+1$ is attained. The forward order satisfies no such
+bound: it reaches $+3$ in the search included with the code and $\Omega(d)$ on the family of
+Theorem~\ref{thm:order}.
+\end{proposition}
+
+\begin{theorem}[Warm start, general]\label{thm:sharpwarm}
+For every bipartite instance ($V = A \sqcup B$ and ${\mathcal{C} \subseteq A \times B}$, both sides
+nonempty), every prediction $\hat{y}$, and every weakly-descending scan order,
+$\|y^* - \repair_{\downarrow}(\hat{y})\|_0 \le \min\{|A| + |B|,\ \|y^* - \hat{y}\|_0 + 2\min(|A|,|B|) - 1\}$,
+both measured to the optimal face; at $\min(|A|,|B|) = 1$ this is
+Proposition~\ref{prop:sortedwarm}.
+\end{theorem}
+
+The bound is attained at every $\min(|A|,|B|)$, inside the regime where it has content
+(Proposition~\ref{prop:sharpattained}).
+
+\smallskip
+\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+\textbf{Content of Theorem~\ref{thm:sharpwarm}.} Both sides are Hamming distances on $V$,
+so $\|\cdot\|_0 \le |A|+|B|$ always holds, and the additive term has content only when
+$\|y^*-\hat y\|_0 \le \bigl||B|-|A|\bigr|$. On a balanced
+$n\times n$ instance (the setting of \citet{chen2022} and of every instance in
+Table~\ref{tab:measure}) the additive branch $\|y^*-\hat y\|_0 + 2n-1$ is at least
+$2n = |A|+|B|$ whenever $\|y^*-\hat y\|_0 \ge 1$, so the theorem is vacuous there. The next
+theorem shows that the operator itself fails there.}}
+\smallskip
+
+\begin{definition}[The balanced family $\mathcal{B}_n$]\label{def:balancedfam}
+For $n \ge 2$, $\mathcal{B}_n$ has $A = \{a_1,\dots,a_n\}$, $B = \{b_1,\dots,b_n\}$,
+$\mathcal{C} = A \times B$, $w_{a_1 b_k} = 2n-k$, $w_{a_i b_k} = 2(n-k)$ for $i \ge 2$, and
+$\hat y = f - n\,e_{a_1}$, where $f$ is an optimal dual (Lemma~\ref{lem:balancedface}) with
+$f_{a_1} = n$, $f_{a_i} = 0$ for $i \ge 2$ and $f_{b_k} = 2(n-k)$.
+\end{definition}
+
+\begin{theorem}[Sorting is not $\ell_0$-additive on balanced instances]\label{thm:balancedlb}
+For every $n \ge 2$, on $\mathcal{B}_n$ we have $|A| = |B| = n$, $\opt = n^2$,
+$\|y^* - \hat y\|_0 = 1$, and $\|y^* - \repair_{\sigma}(\hat y)\|_0 = n$ for \emph{every}
+weakly-descending order $\sigma$, both minima over the full optimal face. Hence
+$\|y^* - \repair_{\downarrow}(\hat y)\|_0 = \|y^* - \hat y\|_0 + \min(|A|,|B|) - 1$.
+\end{theorem}
+
+Rows $a_2, \dots, a_n$ never fire, and row $a_1$'s strictly decreasing weights fire in order, each
+with residual $1$, lifting every column by one (Appendix~\ref{app:sorted}).
+
+\begin{corollary}[No additive constant]\label{cor:noadditive}
+The additive term of Theorem~\ref{thm:sharpwarm} cannot be replaced by anything below
+$\min(|A|,|B|) - 1$; on balanced $n \times n$ instances the sorted scan's optimal additive constant
+lies in $[\,n-1,\ 2n-1\,]$.
+\end{corollary}
+
+Sorting has no multiplicative bound either: on $\mathcal{B}_n$ it adds $n - 1$ wrong coordinates to
+the prediction's one, while the weakly-increasing scan (same gap and both $\ell_1$ distances), the cover-directed
+scan and the walk end at face distance at most $1$ (Rems.~\ref{rem:balancedorder},
+\ref{rem:coverscan}).
+
+\begin{proposition}[Cold start]\label{prop:sortedcold}
+Starting from $\hat{y} = 0$, whenever $\repair_\downarrow$ fires at a constraint $(a,b)$, both
+endpoints are still at $0$, and immediately afterwards $y_a = y_b = w_{ab}$. Consequently, the
+constraints at which it fires form a \emph{matching}; at most $\min(|A|,|B|)$ raises occur, and at
+most $2\min(|A|,|B|)$ coordinates move, independently of the larger side.
+\end{proposition}
+
+Moved coordinates do not bound the face distance: a $4\times5$ instance ends at
+$9 = |A|+|B| > 2\min(|A|,|B|)$ under every weakly-descending order
+(Proposition~\ref{prop:coldrefuted}). The cold-start worst case is
+exactly $\lfloor\tfrac52\min(|A|,|B|)\rfloor-1$ for $\min(|A|,|B|) \ge 3$
+(Theorem~\ref{thm:coldfivehalves}). Where sorting gives $+1$ with $|A|=1<|B|$, there is no perfect matching, so \citet[Thm.~3.2]{chen2022} does not
+apply. We keep sorting as the natural candidate whose limits we can state exactly; it is not the
+repair we recommend.
+
+\section{Composition with Chen et al.'s \texorpdfstring{$\ell_0$}{l0} runtime at a factor of two}\label{sec:composition}
+
+\citet[Thm.~3.2]{chen2022} bound the work by $O(m\sqrt{n} + (m + n\log n)\|y^* - \hat{y}'\|_0)$
+for a \emph{feasible} input on $n$ vertices and $m$ edges. Their Corollary~3.3 reaches an
+infeasible $\hat{y}$ through a repair guaranteed only in $\ell_1$, so the only chain is
+$\|y^* - \hat{y}'\|_0 \le \|y^* - \hat{y}'\|_1 \le 3\|\hat{y} - y^*\|_1$ (integral duals), an $\ell_1$-parameterised
+bound. Theorem~\ref{thm:composed} removes that dependence in their packing orientation and composes
+with their bound as stated.
+
+\paragraph{A factor in place of a constant.} A \emph{repair} is any map $\repair : \R^V \to \dfeas$;
+it is \emph{$\ell_1$-non-expansive} if every output is \emph{admissible},
+$\|\repair(\hat y) - y\|_1 \le \|\max(\hat y, 0) - y\|_1$ for all $y \in \dfeas$, and
+\emph{$\ell_0$-additive} with constant $c$ if $\|y^* - \repair(\hat y)\|_0 \le \|y^* - \hat y\|_0 + c$
+on every instance and prediction, $c$ independent of $|A|, |B|$.
+
+\begin{theorem}[No $\ell_1$-non-expansive repair is $\ell_0$-additive; covering form]\label{thm:noadditiveclass}
+On covering instances no scan order of the greedy repair is $\ell_0$-additive (fixed, sorted, adaptive, randomised,
+or chosen with hindsight), and neither is any other $\ell_1$-non-expansive repair, of any
+running time. More precisely, for every $k \ge 1$ there is a covering instance with $|A| = k$,
+$|B| = 3k$, a unique optimal dual $y^*$, and a prediction $\hat y \ge 0$ with
+$\|y^* - \hat y\|_0 = 3k$, such that every $z \in \dfeas$ with $\|z - y\|_1 \le \|\hat y - y\|_1$
+for all $y \in \dfeas$ satisfies $\|y^* - z\|_0 = 4k = |A| + |B|$. Every output of every
+full-residual scan is such a $z$, because the proof of Theorem~\ref{thm:nonexp} bounds each raise
+individually.
+\end{theorem}
+
+The witness is $k$ copies of the gadget $w = (1,2,2)$, $\hat y = (0 \mid 0,2,2)$, with unique optimum
+$(2 \mid 0,0,0)$. It saturates the coordinate count, but additivity also fails without saturation:
+
+\begin{corollary}[Sparse predictions]\label{cor:sparse}
+For every $c$ and $\varepsilon > 0$ there is a covering instance and a prediction with
+$\|y^* - \hat y\|_0 \le \varepsilon\, n$ for $n$ coordinates, on which every admissible
+output exceeds $\|y^* - \hat y\|_0 + c$. Additivity fails already on predictions \emph{sparse} in
+the sense of \citeauthor{chen2022}'s $o(n)$ threshold (covering instances, not their setting).
+\end{corollary}
+
+Theorem~\ref{thm:noadditiveclass} excludes an additive constant but not a factor (Remark~\ref{rem:noadditivescope}).
+It also does not block the weaker property that the runtime bounds use, an $\ell_1$ bound toward
+optimal duals only:
+
+\begin{proposition}\label{prop:faceadditive}
+Let $f_1$ be an $\ell_1$-nearest point of the optimal face to $\hat y$. Then $f_1$ is feasible,
+lies \emph{on} the optimal face (so $\|y^* - f_1\|_0 = 0$, additive with constant $0$) and
+satisfies $\|f_1 - y^*\|_1 \le 2\|\hat y - y^*\|_1$ for \emph{every} optimal $y^*$, hence meets the
+hypothesis $\|\hat y' - y^*\|_1 \le 3\|\hat y - y^*\|_1$ under which Corollary~3.3 of
+\citet{chen2022} composes.
+\end{proposition}
+Indeed $f_1$ lies on the face, inside $\dfeas$, and for optimal $y^*$ the triangle inequality and
+minimality of $f_1$ give $\|f_1 - y^*\|_1 \le \|f_1 - \hat y\|_1 + \|\hat y - y^*\|_1 \le
+2\|\hat y - y^*\|_1$.
+Computing $f_1$ means optimising over the optimal face, so it requires the optimum. On bipartite
+covering instances the best factor any $\ell_1$-non-expansive repair of any running time can have
+is exactly $3/2$, approached along an explicit family (Theorem~\ref{thm:threehalves},
+Appendix~\ref{app:dichotomy}); the construction consults an optimal dual and a maximum-weight
+matching.
+
+\paragraph{The cover-directed scan.} The constraints violated at $p = \max(\hat y, 0)$ form the
+\emph{violated graph} $G(p)$. Its repair LP is a weighted vertex cover problem, an observation due
+to \citet[\S3.1]{dinitz2021}. We use their graph with the unweighted objective, whose optimum is the cover number
+$\tau(G)$ (on bipartite systems the maximum matching size, by K\H{o}nig's theorem). An optimal dual
+satisfies every constraint the prediction violates, so the prediction is wrong at an endpoint of
+each: the wrong coordinates cover $G$. Firing once per vertex of a minimum cover then breaks at
+most one correct coordinate per firing.
+
+\begin{theorem}[The cover-directed scan]\label{thm:coverscan}
+Let $S$ be a vertex cover of $G(p)$, and let $\repair_S$ scan as follows: starting from $p$, for
+each $i \in S$ in turn, if some constraint at $i$ is still violated, fire the one of largest
+residual, raising both endpoints by the full residual. Then $\repair_S(\hat y)$ is feasible, it
+changes at most $2|S|$ coordinates of $p$, and it equals $\repair_\sigma(\hat y)$ for an order
+$\sigma$ that depends on $\hat y$, so it is a non-expansion onto $\dfeas$ in every $\ell_p$, toward
+every feasible point. On a bipartite system, with $S$ a minimum vertex cover,
+$|S| = \tau(G(p)) \le \min\{\|y^* - \hat y\|_0,\ |A|,\ |B|\}$ and
+$\|y^* - \repair_S(\hat y)\|_0 \le \|y^* - \hat y\|_0 + \min\{\|y^* - \hat y\|_0, |A|, |B|\}
+\le 2\|y^* - \hat y\|_0$, at a cost of $O(m\sqrt n)$ for the cover. The maximal-matching variant runs in
+$O(|\mathcal C|)$, needs no bipartiteness, and gives at most $3\|y^* - \hat y\|_0$.
+\end{theorem}
+
+Its additive term is at most Theorem~\ref{thm:sharpwarm}'s at every shape (equality only at
+$\min(|A|,|B|) = 1$), and it ends at face distance $1$ on $S_4$ and on $\mathcal{B}_n$
+(Remark~\ref{rem:coverscan}). Its packing mirror gives the composition:
+
+\begin{theorem}[The composition, from an infeasible prediction]\label{thm:composed}
+Let $y_i + y_j \le c_{ij}$, $(i,j) \in \mathcal{C} \subseteq A \times B$, be the packing system of
+the perfect-matching dual, with $c$ integral, and let $\hat y$ be an integral prediction, possibly
+infeasible. Write $G(\hat y)$ for the graph of violated constraints and $\tau$ for its vertex
+cover number. The mirror scan of Definition~\ref{def:greedy}, run over a minimum vertex cover $S$
+of $G(\hat y)$ (for each $i \in S$ in turn, if some constraint at $i$ is still violated, pick
+one of largest excess and lower both its endpoints by the full excess) outputs a feasible
+integer dual $\hat y'$ in $O(m\sqrt{n})$ time with
+\[
+\|y^* - \hat y'\|_0 \;\le\; \|y^* - \hat y\|_0 + \tau \;\le\; 2\,\|y^* - \hat y\|_0
+\qquad\text{for every optimal dual $y^*$ simultaneously.}
+\]
+Composed with \citet[Thm.~3.2]{chen2022}, the end-to-end cost from the infeasible prediction is
+$O(m\sqrt{n} + (m + n\log n)\cdot 2\|y^* - \hat{y}\|_0)$, with $y^*$ whichever optimal dual their bound fixes. In particular the $o(n)$ improvement
+threshold holds in the prediction's own $\ell_0$ error.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Coordinates only decrease; after $i \in S$ fires its largest excess, every constraint at $i$ holds
+from then on, so the output is feasible after at most $|S|$ firings. For optimal $f$, a violated
+constraint has $\hat y_i + \hat y_j > c_{ij} \ge f_i + f_j$, so $C = \mathrm{supp}(\hat y - f)$
+covers $G(\hat y)$ and $\tau \le |C|$; each firing changes at most one coordinate outside $C$, so
+$\|f - \hat y'\|_0 \le |C| + |S| \le 2|C|$ (full proof in Appendix~\ref{app:dichotomy}).
+\end{proof}
+
+On a balanced $n \times n$ instance the factor~$2$ bound has content whenever
+$\|y^* - \hat y\|_0 < n$, since then $2\|y^* - \hat y\|_0 < 2n = |A| + |B|$, in particular
+throughout the $o(n)$ regime of \citeauthor{chen2022}'s threshold.
+
+\begin{proposition}[The one-sided walk has the same factor]\label{prop:walkbound}
+Let $\mathrm{Walk}$ be our covering transplant of Algorithm~1 of \citet{dinitz2021}, as used in
+Section~\ref{sec:exp}: on $G(p)$, with the residuals $r_{ij} = w_{ij} - p_i - p_j$ fixed at their
+initial values, repeatedly pick a vertex $i$ that still has an edge and, while $i$ has an edge,
+set $\delta_i$ to the largest residual at $i$, delete $i$ with its edges, and move to a neighbour
+attaining that residual; output $p + \delta$. For every choice of starting vertices and of ties
+among largest residuals,
+$\|y^* - \mathrm{Walk}(\hat y)\|_0 \le \|y^* - \hat y\|_0 + \tau(G(p)) \le 2\|y^* - \hat y\|_0$.
+The additive term cannot be removed: with $w = \bigl(\begin{smallmatrix} 1 & 2 & 3 & 1 \\ 1 & 2 & 1 & 2 \end{smallmatrix}\bigr)$
+and $\hat y = (0, 0 \mid 0, 3, 3, 3)$ the walk ends at face distance $6$ from $5$ under every
+such choice, and on $k$ disjoint copies at $6k$ from $5k$.
+\end{proposition}
+
+Feasibility is their Lemma~5, and the path structure is their Lemma~6, moved from $\ell_1$
+movement to a coordinate count. One-sidedness gives no better worst case (both bounds are
+$\|y^* - \hat y\|_0 + \tau(G(p))$); it helps in the typical case of Section~\ref{sec:exp} but loses
+non-expansion (Theorem~\ref{thm:nonexp}). On covering instances the factor~$2$ is tight in the limit for the
+cover-directed scan ($(2k+1)/(k+1)$, Prop.~\ref{prop:chainfam}) and for the walk ($(2m-2)/m$,
+Prop.~\ref{prop:ladderfam}); for packing we claim only the upper bound.
+
+\section{Experiments}\label{sec:exp}
+
+Instances are balanced $n \times n$ assignment problems (uniform, clustered or Euclidean
+weights). The prediction is an LP-optimal dual with
+$10\%$ of its coordinates corrupted, and each cell has ten draws (mean $\pm$ population std). The
+random scan takes the constraints in a fresh uniformly random order on each draw, and the baseline
+row-reduction start, $u_a = \max_b w_{ab}$ and $v = 0$, ignores the prediction. Work
+is the number of dual adjustments of an instrumented successive-shortest-path solver (an operation
+count, not wall-clock time). The solver is not the algorithm
+\citet{chen2022} analyse, so the experiment tests whether post-repair $\ell_0$ tracks
+warm-started work in a solver of this family.
+
+\begin{table}[t]
+\centering
+\caption{At $n = 200$: (a) post-repair $\ell_0$ (pre: the prediction's own); (b) dual adjustments.
+The panels come from different pinned draw streams (cover-directed values on each panel's own
+draws), so they are not comparable draw by draw. The walk uses lowest-index start and
+tie-breaks. Appendix~\ref{app:experiments} reports other $n$. Bold marks the row minimum when a repair attains it.}
+\label{tab:measure}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
+\toprule
+(a) post-repair $\ell_0$ & pre & sorted & forward & cover-dir. & walk & \\
+\midrule
+uniform   & $39.8\std{0.6}$ & $43.4\std{2.3}$ & $54.9\std{4.9}$ & $39.5\std{0.8}$ & $\mathbf{32.9}\std{3.1}$ & \\
+clustered & $39.7\std{0.6}$ & $47.9\std{3.6}$ & $67.2\std{6.2}$ & $39.1\std{0.9}$ & $\mathbf{35.3}\std{2.8}$ & \\
+euclidean & $39.8\std{0.4}$ & $48.2\std{3.2}$ & $63.8\std{6.3}$ & $39.7\std{0.5}$ & $\mathbf{35.5}\std{1.9}$ & \\
+\midrule
+(b) dual adjustments & row-red. & sorted & forward & cover-dir. & walk & uniform shift\\
+\midrule
+uniform   & $42.7\std{3.4}$ & $72.6\std{8.6}$ & $84.7\std{10.2}$ & $66.6\std{9.7}$ & $56.3\std{10.4}$ & $253.1\std{10.1}$\\
+clustered & $367.2\std{83.1}$ & $120.3\std{13.5}$ & $134.9\std{7.2}$ & $110.4\std{11.0}$ & $\mathbf{95.6}\std{10.7}$ & $281.4\std{11.9}$\\
+euclidean & $223.8\std{26.2}$ & $115.5\std{15.3}$ & $135.6\std{17.2}$ & $110.2\std{15.0}$ & $\mathbf{95.0}\std{10.5}$ & $265.6\std{10.6}$\\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\paragraph{Sorting among scan orders.} At $n = 200$ (Tables~\ref{tab:measure},
+\ref{tab:exp}) sorting exceeds the prediction's error by $9$--$21\%$, the forward and random scans
+by $37$--$69\%$. Over all twelve cells it beats forward on $117$ of $120$ paired draws in $\ell_0$
+and on $104$ of $120$ in adjustments ($5$ ties; exact one-sided sign test
+$p = 1.9\times10^{-20}$). This comparison is among scan orders only, and it does not hold under drift
+(Table~\ref{tab:drift}). Where Theorem~\ref{thm:sharpwarm} has content (unbalanced shapes),
+sorting ends at the prediction's own error on all $31$ draws where a repair acts, and the walk
+beats it on $30$ and loses on none (Table~\ref{tab:rect}, one pinned seed; other seeds differ).
+
+\paragraph{The walk's empirical advantage.} The walk has the lowest post-repair $\ell_0$ error in every
+cell, and nothing we measured favours sorting over it in practice. It is below the prediction's own error in
+all twelve cell means ($108$ of $120$ draws strictly below, $9$ ties, $3$ above), and sorting never
+beats it in a paired draw of these cells. It is also the cheapest repair start in every solver
+cell, although the row-reduction start is cheaper still on uniform weights at
+$n \in \{150, 200\}$ and in four of six drift cells (Table~\ref{tab:drift}). One-sidedness costs
+non-expansion: on the single
+constraint $w=4$ with $\hat y=(1,1)$ and the feasible $y=(1,3)$, the walk raises one endpoint to
+$(3,1)$ and the $\ell_1$ distance goes from $2$ to $4$, while the two-sided raise gives $(3,3)$
+and stays at $2$. The advantage is not uniform either: on a $3\times4$ instance, from face distance $5$,
+the walk ends at $6$ and the sorted scan at $4$ (under our fixed conventions), and the walk is
+strictly worse than sorting on $13$ of $400$ random small instances. We have no theorem explaining
+the typical-case advantage. In adjustments the cover-directed scan lies between sorting and the
+walk in all twelve solver cells, beating sorting on $95$ of $120$ draws and the walk on $4$.
+
+\paragraph{Predicting solver work.} When five repairs (sorted, forward, random,
+walk, uniform shift; no cover-directed scan) are ranked per instance, $\ell_0$ has Spearman $+0.95$ with
+adjustments, against $+0.82$ ($\ell_1$ error) and $+0.80$ (gap), and is best in $11$ of $12$ cells
+(permutation $p = 0.0005$); when all cells are pooled, the three tie. On our implementation of
+\citeauthor{chen2022}'s solver (their Algorithm~1), over the same five repairs, $\ell_0$ tracks the
+tight-subgraph deficiency their proof counts ($+0.98$, against $+0.82$ and $+0.81$) but not the
+iteration count their bound multiplies ($+0.58$, against $+0.61$).
+
+The uniform shift costs up to $5.9\times$ the row-reduction start ($253.1$ vs.\ $42.7$). By
+Proposition~\ref{prop:tightrows}, each row without a tight edge at the start costs at least one
+adjustment. Within the $\ell_\infty$-optimal class, $\ell_0$ and the gap
+mis-rank the uniform and endpoint shifts in $8$ of $12$ cells (we know of no mechanism).
+
+\section{Recommendation, limitations, open problems, and code}\label{sec:discussion}
+
+\paragraph{Recommendation.} For a proved $\ell_0$ factor together with $\ell_1$
+non-expansion, use the cover-directed scan (factor~$2$), the only measured repair with both. Its
+mirror gives the composition (Theorem~\ref{thm:composed}), and its measured increase over the
+prediction's error is near zero. The walk beats it in every measured cell but is not
+$\ell_1$-non-expansive (Section~\ref{sec:exp}); if $\ell_1$ non-expansion is not needed, the
+measurements favour the walk. We do not recommend
+sorting: its additive term is never below the cover-directed scan's, and the walk does better in
+our experiments.
+
+\paragraph{Limitations.} (i) The sorted bound is vacuous on balanced instances. (ii) We count
+operations, not time, and $\ell_0$ ranks neither \mbox{\citeauthor{chen2022}}'s iteration count
+nor the $\ell_\infty$-optimal class. (iii) Instances are synthetic, with $n \le 200$ when balanced, ten draws per cell, $10\%$ corruption and distances to
+a reference optimum. Under weight drift the $\ell_0$ error saturates ($114.7$ of $120$ at $n = 60$;
+Table~\ref{tab:drift}), where $\ell_0$ bounds, \mbox{\citeauthor{chen2022}}'s included, say
+nothing. (iv) The cover needs $O(m\sqrt n)$ time, and the linear-time variant has factor~$3$.
+(v) The factor-$3/2$ construction consults the optimum, and the composition is against
+\mbox{\citeauthor{chen2022}}'s fixed optimal dual. (vi) The walk's advantage is unexplained.
+\emph{Open:} can a near-linear-time $\ell_1$-non-expansive repair beat factor~$2$, or reach $3/2$?
+
+\paragraph{Code.} The code at \coderepo{} (\codelicence) regenerates every theorem check, table and
+constant from pinned seeds, with seven Python programs, in about twenty minutes on a laptop CPU
+(Appendix~\ref{app:repro}). The NeurIPS checklist follows the appendices, and Appendix~\ref{app:ai} describes the use of AI.

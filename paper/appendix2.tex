@@ -1,0 +1,990 @@
+% Appendices E, F and G of the New In ML 2026 camera-ready paper: the composition proofs, the
+% experiments in full, and reproducibility.
+
+\section{Composition at a factor of two: proofs}\label{app:dichotomy}
+
+This appendix proves the results of Section~\ref{sec:composition} and states those the body only
+cites. Throughout, ``the class'' is the set of all $\ell_1$-non-expansive repairs defined there,
+and ``the walk'' is our covering transplant of Algorithm~1 of \citet{dinitz2021}, defined in
+Proposition~\ref{prop:walkbound}, with residuals fixed at their initial values.
+
+\subsection{No additive constant for the class}
+
+\begin{proof}[Proof of Theorem~\ref{thm:noadditiveclass}]
+\emph{One block.} Every prediction in this proof is non-negative, so $z \in \dfeas$ is admissible exactly when $\|z - y\|_1 \le \|\hat y - y\|_1$ for all $y \in \dfeas$. Take $A = \{a\}$, $B = \{b_1, b_2, b_3\}$, $w = (1, 2, 2)$ and $\hat y = (0 \mid 0, 2, 2)$. With $y_a = t$ the cheapest completion has value
+$t + (1-t)^+ + 2(2-t)^+$, which is $5 - 2t$ on $[0,1]$, $4 - t$ on $[1,2]$ and $t$ beyond. So
+$\opt = 2$, attained only at $t = 2$ with the $B$-coordinates all $0$. The optimal face is
+therefore the single point $y^* = (2 \mid 0, 0, 0)$, and $\hat y$ agrees with it at $b_1$ alone,
+so $\|y^* - \hat y\|_0 = 3$. The point $y_1 = (0 \mid 1, 2, 2)$ is feasible, at $\ell_1$ distance
+$1$ from $\hat y$, so any admissible $z$ has $\|z - y_1\|_1 \le 1$. Agreeing with $y^*$ at $a$,
+$b_2$ or $b_3$ costs $2$. Agreeing at $b_1$ costs the whole budget and forces
+$z = (0 \mid 0, 2, 2) = \hat y$, which is infeasible. So $z$ agrees with $y^*$ nowhere:
+$\|y^* - z\|_0 = 4$.
+
+\emph{Every block at once.} For a prediction $\hat y$ on a system with feasible set $\dfeas$ put
+$e(z) = \sup_{y \in \dfeas} \bigl(\|z - y\|_1 - \|\hat y - y\|_1\bigr)$, so that $z$ is admissible
+exactly when $e(z) \le 0$. On the block above, $e \ge 0$ everywhere: with $y_2 = (1 \mid 0, 2, 2)$,
+also feasible at distance $1$ from $\hat y$, the triangle inequality gives
+$\|z - y_1\|_1 + \|z - y_2\|_1 \ge \|y_1 - y_2\|_1 = 2$, so one of the two terms is at least
+$1 = \|\hat y - y_i\|_1$. Now take $k$ disjoint copies of the block, with all cross weights $0$.
+Cross constraints read $y_i + y_j \ge 0$ and are implied by $y \ge 0$, so $\dfeas$ is the product
+of the blocks' feasible sets. The optimum $\opt$ is the sum of the blocks' optima, attained only
+when every block is optimal, so the face is the single point $y^* = (y^*_1, \dots, y^*_k)$ and
+$\|y^* - \hat y\|_0 = 3k$. Also $e(z) = \sum_g e_g(z_g)$, since the supremum of a sum of functions
+of disjoint variables over a product set is the sum of the suprema. Since each $e_g \ge 0$,
+$e(z) \le 0$ forces $e_g(z_g) \le 0$ in every block, in particular $\|z_g - y_1\|_1 \le 1$, and the
+one-block argument gives $\|y^*_g - z_g\|_0 = 4$ in every block.
+\end{proof}
+
+In its smallest form the witness saturates the coordinate count of Section~\ref{sec:prelim},
+$4k = |A|+|B|$. Corollary~\ref{cor:sparse} shows that the obstruction does not depend on
+this.
+
+\begin{proof}[Proof of Corollary~\ref{cor:sparse}]
+Pad the witness. Adjoin $M$ further rows and $N$ further columns, all of whose weights are $0$,
+and predict $0$ on them. All cross weights are $0$, so $\dfeas$ is still a product and $\opt$ is
+still $2k$. The face is still a single point, now with a $0$ in each adjoined coordinate, which
+$\hat y$ already matches, so $\|y^* - \hat y\|_0 = 3k$ as before. And $e$ still decomposes: the
+summand of an adjoined coordinate is $e_i(z_i) = z_i$, so $e(z) \le 0$ forces $z_i = 0$ there.
+Every admissible $z$ therefore still has $\|y^* - z\|_0 = 4k$, now with $|A| = k + M$ and
+$|B| = 3k + N$. The increase does not depend on $M$ and $N$, which can therefore be arbitrarily large.
+Taking $M = N = k$ leaves the increase $k$ at $4k$ against a coordinate count of $6k$ and against
+$\|y^* - \hat y\|_0 + \min(|A|,|B|) = 5k$, while still attaining $\|y^* - \hat y\|_0 + \tau(G(p))$
+exactly. Taking $M = N = k^2$ leaves the same increase $k$ from a prediction wrong on
+$3k = \Theta(\sqrt{n})$ of $n = 2k^2 + 4k$ coordinates.
+\end{proof}
+
+\begin{remark}[Scope of the theorem]\label{rem:noadditivescope}
+(i) The theorem excludes an additive constant but not a factor: the witness has ratio only $4/3$.
+An exhaustive search over $1 \times 2$ and $1 \times 3$ systems with a unique optimal dual and
+weights and predictions in $\{0, \dots, 4\}$ finds no larger ratio, and no witness on
+$1 \times 2$. Theorem~\ref{thm:coverscan} gives an explicit factor~$2$, and
+Theorem~\ref{thm:threehalves} fixes the class constant on bipartite covering instances at $3/2$.
+(ii) The theorem assumes non-expansion toward \emph{every} feasible point, which
+Theorem~\ref{thm:nonexp} gives and on which the obstruction rests. It does not speak to the weaker
+property that the runtime bounds use, an $\ell_1$ bound toward optimal duals only, under which
+Corollary~3.3 of \citet{chen2022} composes;
+there additivity is possible (Proposition~\ref{prop:faceadditive}). Face-only non-expansion is
+also unobstructed on this family, whose face is the single point $y^*$.
+\end{remark}
+
+\subsection{The constant of the class is \texorpdfstring{$3/2$}{3/2}}
+
+Theorems~\ref{thm:noadditiveclass} and~\ref{thm:coverscan} put the class constant between $4/3$
+and $2$. On bipartite covering instances it is exactly $3/2$:
+
+\begin{theorem}[The constant of the class is $3/2$]\label{thm:threehalves}
+Let $p = \max(\hat y, 0)$. As in Section~\ref{sec:composition}, $z \in \dfeas$ is
+\emph{admissible} for $\hat y$ if $\|z - y\|_1 \le \|p - y\|_1$ for every $y \in \dfeas$, and a map
+is an $\ell_1$-non-expansive repair exactly when every output is admissible. Any choice of an
+admissible point per prediction is one (returning $\repair_\sigma$ elsewhere), so the admissible
+points are exactly the outputs the class can return on $\hat y$. On bipartite covering instances:
+\begin{enumerate}
+\item[(a)] For every optimal dual $f$ and every maximum-weight matching $M$ there is an admissible
+$z$ with
+\begin{align*}
+  \|f - z\|_0 \;&\le\; |\mathrm{supp}(p - f)| + \bigl|\{ v : p_v < f_v,\ p_{m(v)} > f_{m(v)} \}\bigr| \\
+  \;&\le\; |\mathrm{supp}(p - f)| + \min\bigl(|C^-|, |C^+|\bigr),
+\end{align*}
+where $m(v)$ is the $M$-partner of $v$ and $C^-$, $C^+$ are the coordinates on which $p$ lies
+below, respectively above, $f$. In particular, from a prediction at $\|y^* - \hat y\|_0 = r$ some
+admissible $z$ has $\|y^* - z\|_0 \le r + \lfloor r/2 \rfloor \le \tfrac{3}{2}\,r$, and
+$\|y^* - z\|_0 \le r$ whenever $p \le f$ or $p \ge f$ coordinatewise.
+\item[(b)] For every $k \ge 1$ there is an instance with $|A| = k$, $|B| = 2k+1$, a unique optimal
+dual, and a prediction with $\|y^* - \hat y\|_0 = 2k+1$ on which \emph{every} admissible $z$ has
+$\|y^* - z\|_0 = 3k+1 = (2k+1) + \lfloor (2k+1)/2 \rfloor = |A| + |B|$: every admissible output
+differs from the face on every coordinate.
+\end{enumerate}
+Consequently the best multiplicative $\ell_0$ constant over all $\ell_1$-non-expansive repairs, of
+any running time, is exactly $3/2$: the map sending $\hat y$ to the point of (a) is a member of the
+class with $\|y^* - \repair(\hat y)\|_0 \le \lfloor 3\|y^* - \hat y\|_0 / 2 \rfloor$ on every
+bipartite covering instance, and by (b) no member has a smaller constant, the ratios $(3k+1)/(2k+1)$
+increasing to $3/2$. The bound of (a) is attained for every odd $r$ (for $r \ge 3$ by (b), for
+$r = 1$ by any feasible non-optimal prediction, whose only admissible output is $p$ itself).
+The order in (a) is read off an
+optimal dual and a maximum-weight matching; the theorem says nothing about repairs that do not
+consult the optimum.
+\end{theorem}
+
+\begin{proof}
+(a) Write $C = \mathrm{supp}(p - f) = C^- \sqcup C^+$. By complementary slackness ($M$ is an optimal solution of the matching LP, since the bipartite matching polytope is integral), every coordinate with $f_v > 0$, in particular every $v \in C^-$, is matched in $M$ by an edge of positive weight, and every edge of $M$ is tight at $f$. Starting from $p$, run two rounds of full-residual raises on currently violated constraints, each constraint fired at most once.
+\emph{Round one:} for each $v \in C^-$ in turn, fire $(v, m(v))$ if it is violated. Since $M$ is a
+matching, no two constraints of round one share an endpoint. So $v$ is still at $p_v$ when its
+constraint is decided, and so is $m(v)$, unless $m(v)$ lies in $C^-$ and was processed earlier.
+This is the only case in which a round-one constraint can meet an already-raised endpoint, and
+it is handled below for either order. If $m(v)$ is correct ($p_{m(v)} = f_{m(v)}$), the residual
+is exactly $f_v - p_v$, so $v$ reaches $f_v$ and $m(v)$ leaves $f$: one coordinate fixed, one
+broken. If $m(v) \in C^-$, then whichever of the two is processed first, both endpoints end at or
+above $f$ on those coordinates and stay wrong. Neither is counted as fixed. If $m(v) \in C^+$,
+either nothing fires or $v$ ends strictly below $f_v$, while $m(v)$ stays above: no change. After
+round one the coordinates still below $f$ form a subset $L$ of
+$\{ v \in C^- : m(v) \in C^+ \}$, and since $m$ is injective $|L| \le \min(|C^-|, |C^+|)$.
+
+\emph{Round two:} every constraint still violated has an endpoint in $L$, since
+$z_i + z_j < w_{ij} \le f_i + f_j$ forces an endpoint below $f$, and coordinates only rise. For each $v \in L$ in turn, fire its violated constraint of largest residual, if any. This satisfies every constraint at $v$ from then on and changes at most one further coordinate.
+
+After round two nothing is violated, so the result is feasible. As in part (a) of the proof of Theorem~\ref{thm:coverscan} below, it is $\repair_\sigma(\hat y)$ for $\sigma$ listing the fired constraints in firing order, hence admissible by Theorem~\ref{thm:nonexp}. It differs from $f$ on at most $|C| + |L|$ coordinates. After round one the wrong set is $C$ minus the fixed coordinates plus their broken partners, of size at most $|C|$. Each round-two firing adds at most one wrong coordinate, its partner, whether that partner was correct, already broken, or fixed in round one (a fixed coordinate lies in $C$).
+
+Now take $f$ at Hamming distance
+$r$ from $\hat y$. Then $|C| \le r$ (where $\hat y_i < 0$, either $f_i = 0 = p_i$ or $f_i > 0 \ne \hat y_i$)
+and $\min(|C^-|,|C^+|) \le \lfloor |C|/2 \rfloor$. If $p \le f$ or $p \ge f$, then $L = \emptyset$.
+
+(b) Take $A = \{a_1, \dots, a_k\}$, $B = \{b_1, \dots, b_k, c_1, \dots, c_{k+1}\}$, weights
+$w_{a_i b_i} = 1$ and $w_{a_i c_i} = w_{a_i c_{i+1}} = 2$, all others $0$, and
+$\hat y = (0, \dots, 0 \mid 0, \dots, 0, 2, \dots, 2)$: rows and $b$'s at $0$, $c$'s at $2$, so
+$p = \hat y$. \emph{The face is the point $f$ with $f_{a_i} = 2$ and $f = 0$ elsewhere.} It is
+feasible with value $2k$, and the matching $\{(a_i, c_i)\}$ has weight $2k$, so $\opt = 2k$. For any
+optimal $y$, summing $y_{a_i} + y_{c_i} \ge 2$ over $i$ gives
+$\sum_i y_{a_i} + \sum_{i \le k} y_{c_i} \ge 2k = \sum y$, so $y_{c_{k+1}} = 0$, $y_b = 0$, and each
+$y_{a_i} + y_{c_i}$ equals $2$. Then $y_{c_{k+1}} = 0$ forces $y_{a_k} \ge 2$, hence $y_{c_k} = 0$,
+hence $y_{a_{k-1}} \ge 2$, and so on down to $y_{c_1} = 0$ and $y_{a_i} = 2$ for all $i$. So
+$\|y^* - \hat y\|_0 = 2k+1$: the $k$ rows and the $k+1$ columns $c_j$.
+\emph{Every admissible $z$ differs from $f$ on all $3k+1$ coordinates.} Admissible points exist:
+$\repair_\sigma(\hat y) = (1, \dots, 1 \mid 1, \dots, 1, 2, \dots, 2)$ for every order. For each
+$x \in \prod_i \{a_i, b_i\}$ the point $y_x = \hat y + \sum_i e_{x_i}$, which raises $a_i$ or $b_i$
+by one in every block, is feasible ($a_i + b_i \ge 1$, and every $c_j$ is $2$) and at $\ell_1$
+distance $k$ from $\hat y$. Write $z_{a_i} = \alpha_i$, $z_{b_i} = \beta_i$, $z_{c_j} = 2 + \gamma_j$,
+with $z \ge 0$. Admissibility against $y_x$ reads $\sum_i q_i(x_i) + \sum_j |\gamma_j| \le k$ with
+$q_i(a_i) = |\alpha_i - 1| + \beta_i$ and $q_i(b_i) = \alpha_i + |\beta_i - 1|$; since the blocks are
+chosen independently, the maximum over $x$ of these $2^k$ inequalities is
+\[
+  \sum_i \max\bigl(q_i(a_i),\ q_i(b_i)\bigr) + \sum_j |\gamma_j| \;\le\; k ,
+\]
+and each maximum is at least $1$: for $t \ge 0$, $|t - 1| + t \ge 1$ with equality exactly when
+$t \le 1$, so $q_i(a_i) + q_i(b_i) \ge 2$. Hence $\gamma = 0$, so every $c_j$ stays at $2 \ne 0$. In
+every block both quantities equal $1$. By the equality case this forces
+$\alpha_i, \beta_i \in [0, 1]$ and then $(1 - \alpha_i) + \beta_i = 1$, i.e.\ $\alpha_i = \beta_i$,
+while feasibility of $(a_i, b_i)$ forces $\alpha_i = \beta_i \ge 1/2$. So $z_{a_i} \le 1 \ne 2$ and
+$z_{b_i} \ge 1/2 \ne 0$: all $3k+1$ coordinates differ from $f$. For $k = 1$ this is the gadget of
+Theorem~\ref{thm:noadditiveclass}. For $k \ge 2$ the family chains $k$ copies of it through the
+shared columns $c_2, \dots, c_k$. Each shared column constrains two rows at the cost of one wrong
+coordinate while the face stays the single point $f$, and this sharing raises the ratio.
+\end{proof}
+
+The family of (b) saturates, $3k + 1 = |A| + |B|$, as the witness of
+Theorem~\ref{thm:noadditiveclass} does, and it strengthens that theorem: the same increase
+$k$ on $3k+1$ rather than $4k$ coordinates.
+
+The upper bound as constructed consults an optimal dual and a maximum-weight matching, and
+computing either is a full solve. The open question is whether any near-linear-time repair reaches
+$3/2$, or even beats $2$. The cover-directed scan has factor~$2$, which
+Proposition~\ref{prop:chainfam} shows is tight in the limit.
+
+\subsection{The cover-directed scan}
+
+\begin{remark}[The remaining parts of Theorem~\ref{thm:coverscan}]\label{rem:coverscanfull}
+Let $S$ be any vertex cover of $G(p)$ and $\repair_S$ the cover-directed scan of
+Theorem~\ref{thm:coverscan}. Part (a) is the claim of Theorem~\ref{thm:coverscan} that $\repair_S(\hat y)$ is feasible,
+changes at most $2|S|$ coordinates of $p$, and equals $\repair_\sigma(\hat y)$ for an order
+$\sigma$ that depends on $\hat y$. In addition:
+\begin{enumerate}
+\item[(b)] For every optimal $f$, $\mathrm{supp}(p - f)$ is a vertex cover of $G(p)$ contained in $\mathrm{supp}(\hat y - f)$; hence $\tau(G(p)) \le \|y^* - \hat y\|_0$.
+\item[(c)] $\|y^* - \repair_S(\hat y)\|_0 \le \|y^* - \hat y\|_0 + |S|$.
+\end{enumerate}
+With $S$ the set of endpoints of any maximal matching of $G(p)$, found in $O(|\mathcal{C}|)$ time and needing no bipartiteness, $|S| \le 2\tau(G(p))$ and the bound is $\|y^* - \hat y\|_0 + 2\tau(G(p)) \le 3\|y^* - \hat y\|_0$. On a non-bipartite system the face distances are minima over the LP optimal face, which may be fractional (the integral-enumeration shortcut of Section~\ref{sec:prelim} needs bipartiteness).
+\end{remark}
+
+\begin{proof}[Proof of Theorem~\ref{thm:coverscan} and Remark~\ref{rem:coverscanfull}]
+(a) Coordinates only rise, so a satisfied constraint stays satisfied. Firing the constraint of
+largest residual $r$ at $i$ raises $y_i$ by $r$, which is at least the residual of every other
+constraint at $i$, so afterwards every constraint at $i$ holds. Every edge of $G(p)$ has an
+endpoint in $S$, and the constraints outside $G(p)$ held at $p$, so after the loop everything
+holds. Each firing changes its two endpoints and there are at most $|S|$ firings. Let $\sigma$ list
+the fired constraints in firing order, followed by all the others in any order: scanning $\sigma$
+reproduces the same firings from the same states, and every remaining constraint is satisfied
+when reached, so $\repair_\sigma(\hat y) = \repair_S(\hat y)$.
+
+(b) If $(i,j)$ is violated at $p$ then $p_i + p_j < w_{ij} \le f_i + f_j$, so $p$ and $f$ differ
+at $i$ or at $j$. Also, $\mathrm{supp}(p - f) \subseteq \mathrm{supp}(\hat y - f)$: where
+$\hat y_i < 0$, either $f_i = 0 = p_i$ or $f_i > 0 \ne \hat y_i$. Taking $f$ at minimum Hamming
+distance from $\hat y$ gives $\tau(G(p)) \le \|y^* - \hat y\|_0$.
+
+(c) Let $C = \mathrm{supp}(p - f)$ with $f$ as in (b). A constraint fired by the scan is violated
+when fired, hence violated at $p$, hence an edge of $G(p)$, so $C$ contains one of its endpoints:
+of the two coordinates a firing changes, at most one lies outside $C$. The output differs from
+$f$ at most on $C$ and on the changed coordinates outside $C$, so
+$\|f - \repair_S(\hat y)\|_0 \le |C| + \#\mathrm{firings} \le \|y^* - \hat y\|_0 + |S|$, and the
+minimum over the face is no larger. Finally, a minimum cover of a bipartite graph has size
+$\nu(G(p))$ (K\H{o}nig). Either side of the bipartition is a cover, so
+$\tau(G(p)) \le \min(|A|,|B|)$. The $2|M|$ endpoints of a maximal matching $M$ cover every edge,
+and $|M| \le \tau(G(p))$.
+\end{proof}
+
+\begin{remark}[Reading the bound]\label{rem:coverscan}
+First, the additive term is attained, and the factor~$2$ is tight in the limit for the scan as
+stated. The chain family of Proposition~\ref{prop:chainfam} below ends at
+$\|y^* - \hat y\|_0 + \tau(G(p))$ with ratio $(2k+1)/(k+1)$, under one of its two minimum covers,
+in index order and with no ties. The worst case comes from the theorem's free choice of cover and
+order. On $3{,}000$ random instances (shapes up to $4 \times 4$, weights in $\{0,\dots,5\}$,
+predictions in $\{-2,\dots,6\}$), the worst ratio over every minimum cover, every processing order
+of it and every tie among largest residuals is $4/3$ (a sample maximum, not a bound). The scan's
+additive term is also at most Theorem~\ref{thm:sharpwarm}'s at every shape, since
+$\min\{\|y^* - \hat y\|_0, |A|, |B|\} \le 2\min(|A|,|B|) - 1$, with equality only at
+$\min(|A|,|B|) = 1$.
+
+Second, the scan ends at face distance $1$ on both order-dependence families of Sections~\ref{sec:delicate}
+and~\ref{sec:sorted}. On the family of Theorem~\ref{thm:order} the cover is $\{a\}$ and the largest
+residual is at $b_{d-1}$, so it fires once and ends at face distance $1$ where the forward scan
+ends at $d$. On the balanced family $\mathcal{B}_n$ of Definition~\ref{def:balancedfam} the cover
+is $\{a_1\}$, the largest residual is at $b_n$, and it ends at $1$ where every weakly-descending
+order ends at $n$ (Theorem~\ref{thm:balancedlb}). Both violated graphs are stars with a unique
+largest residual. On them the walk also ends at face distance at most $1$, under every start and
+tie-break, since it raises the centre by its largest remaining residual whether it starts there or
+at a leaf. On a star the cover-directed scan fires
+once, and there its selection rule is that of the classical maximal-residual relaxation method of
+\citet{agmon1954} and \citet{motzkin1954}: a most violated constraint first. The full-residual
+raise takes the place of the projection step.
+
+Third, the cover determines where to raise; the raise itself is the usual
+two-sided one. Raising only the cover vertices, each by its largest residual, is feasible, touches
+at most $|S|$ coordinates (exactly $|S|$ for a minimum cover), and satisfies (c) of
+Remark~\ref{rem:coverscanfull} with the same right-hand side. But it is one-sided and loses
+non-expansion, like the walk. The two-sided full-residual raise keeps Theorem~\ref{thm:nonexp} at
+no cost in the bound.
+\end{remark}
+
+\begin{proposition}[Theorem~\ref{thm:coverscan} is tight in the limit for the cover-directed scan]\label{prop:chainfam}
+For $k \ge 2$ let $A_i = 2i + 1$ and take rows $a_1, \dots, a_k$, columns $b_1, \dots, b_k, c$ with
+$w_{a_i b_i} = A_i$, $w_{a_{i+1} b_i} = A_{i+1} - 1$ (indices modulo $k$, so $w_{a_1 b_k} = A_1 - 1$),
+$w_{a_i c} = A_i$, all other weights $0$, and $\hat y = 0$ except $\hat y_c = A_k$. The optimal face
+is the single point with $y_{a_i} = A_i$ and $0$ elsewhere, so $\|y^* - \hat y\|_0 = k + 1$, and
+$\tau(G(p)) = k$. The cover-directed scan run with the minimum cover $\{b_1, \dots, b_k\}$ in that
+order meets no tie and ends at face distance $2k + 1 = \|y^* - \hat y\|_0 + \tau(G(p))$, a ratio
+$(2k+1)/(k+1) \to 2$; on the same instance an admissible output at distance $k + 1$ exists.
+\end{proposition}
+
+\begin{proof}
+The matching $\{(a_i, b_i)\}$ has weight $\sum_i A_i$ and the stated point is feasible with that
+value, so it is optimal. For any optimal $y$, summing $y_{a_i} + y_{b_i} \ge A_i$ gives
+$\sum_i (y_{a_i} + y_{b_i}) \ge \sum_i A_i = \sum y$, so $y_c = 0$ and every $y_{a_i} + y_{b_i} = A_i$,
+and then $y_{a_i} + y_c \ge A_i$ forces $y_{a_i} = A_i$, $y_{b_i} = 0$. At $p$ the violated constraints
+are the $2k$-cycle $a_1 b_1 a_2 b_2 \cdots a_k b_k a_1$, whose vertex cover number is $k$. At $b_i$
+with $i < k$ the two violated constraints have residuals $A_i - z_{a_i} \le A_i$ and $A_{i+1} - 1$,
+and the second is larger, so the scan fires $(a_{i+1}, b_i)$: $a_{i+1}$ ends at $A_{i+1} - 1$, one
+short of its face value, and $b_i$ leaves $0$. At $b_k$ the residuals are $1$ and $A_1 - 1 = 2$, so
+it fires $(a_1, b_k)$. Every row is one short, every $b_i$ and $c$ are off, and no residual was ever
+tied. Firing instead the edge $(a_i, b_i)$ of each row (the row-side cover, or the tight edges
+first) reaches the face point in every row, at distance $k + 1$. This output is
+$\repair_\sigma(\hat y)$ for an order $\sigma$ listing those edges first, hence admissible by
+Theorem~\ref{thm:nonexp}.
+\end{proof}
+
+The two constants therefore differ: the class can always reach $r + \lfloor r/2 \rfloor$, while an
+explicit member can be forced to $r + \tau$. The difference comes from the optimal face, which the
+construction of Theorem~\ref{thm:threehalves}(a) uses. An explicit repair loses in the choice
+of which side of the violated graph to cover, and in what order: on the chain family the row side
+adds no wrong coordinate and the column side ends at the largest distance the bound allows.
+
+\subsection{The composition}
+
+\begin{proof}[Proof of Theorem~\ref{thm:composed}]
+\emph{Feasibility and cost.} Coordinates only decrease, and a packing constraint only gains slack
+when its endpoints decrease, so no satisfied constraint is ever re-violated and every excess is
+non-increasing throughout. When $i \in S$ is processed and its largest current excess is $e > 0$
+at the constraint $(i,j)$, lowering $y_i$ and $y_j$ by $e$ lowers the excess of every other
+constraint at $i$ by at least $e$, and each such excess was at most $e$. So after its turn every
+constraint at $i$ holds for the rest of the scan. Every edge of $G(\hat y)$ has an endpoint in $S$, and
+a constraint outside $G(\hat y)$ held at $\hat y$, so the output is feasible. It is integral
+because $c$ and $\hat y$ are and each step subtracts an integral excess. There is at most one
+firing per vertex of $S$, so at most $|S|$ firings and $O(m)$ work in the scan. A minimum vertex
+cover of the bipartite graph $G(\hat y)$ is read off a maximum matching by K\H{o}nig's theorem in
+$O(m\sqrt{n})$ time.
+
+\emph{The count, against every optimal dual at once.} Fix any optimal dual $f$ and let
+$C = \mathrm{supp}(\hat y - f)$. A constraint violated at $\hat y$ has
+$\hat y_i + \hat y_j > c_{ij} \ge f_i + f_j$, so $\hat y$ and $f$ differ at $i$ or at $j$: $C$ is
+a vertex cover of $G(\hat y)$, and hence $\tau \le |C| = \|f - \hat y\|_0$. Since excesses never
+increase, every fired constraint was already violated at $\hat y$, hence is an edge of
+$G(\hat y)$ and has an endpoint in $C$: of the two coordinates a firing changes, at most one lies
+outside $C$. The output therefore differs from $f$ at most on $C$ and on the at most $|S|$ changed
+coordinates outside $C$:
+$\|f - \hat y'\|_0 \le |C| + |S| = \|f - \hat y\|_0 + \tau \le 2\,\|f - \hat y\|_0$.
+
+\emph{The composition.} $\hat y'$ is a feasible integer dual, so \citet[Thm.~3.2]{chen2022}
+applies to it and costs $O(m\sqrt{n} + (m + n\log n)\|y^* - \hat y'\|_0)$ against the optimal dual
+$y^*$ their bound fixes. The count above holds for that $y^*$ in particular, and the $O(m\sqrt n)$
+spent on the cover is absorbed by the first term.
+\end{proof}
+
+The count holds for every optimal dual, so the composition works against whichever one their
+bound fixes. Reading $\|y^* - \hat y\|_0$ as the distance to the whole optimal face would be
+strictly stronger, and it would need their bound to hold for every optimal dual at once, which
+they do not state. The scan is the packing mirror of the cover-directed scan of
+Theorem~\ref{thm:coverscan}, and the proof above mirrors that theorem's proof.
+Proposition~\ref{prop:walkbound} proves the same count for the walk. For Algorithm~1 of
+\citet{dinitz2021} itself, in the packing form in which it is stated (the repair
+\citeauthor{chen2022}'s Corollary~3.3 names), we claim no $\ell_0$ bound.
+
+\subsection{The walk}
+
+\begin{proof}[Proof of Proposition~\ref{prop:walkbound}]
+Feasibility is Lemma~5 of \citet{dinitz2021}: an edge $(i,j)$ is deleted when its first-visited endpoint $i$ is
+raised, and then $\delta_i \ge r_{ij}$. For the count, fix $f$ at minimum Hamming distance from
+$\hat y$ and let $C = \mathrm{supp}(p - f)$, by Remark~\ref{rem:coverscanfull}(b) a vertex cover of $G(p)$ with $|C| \le \|\hat y - f\|_0 = \|y^* - \hat y\|_0$. One pass of the inner loop visits vertices $i_1, \dots, i_L$, all
+raised, each adjacent in $G(p)$ to the next at the time of the step, and stops at a vertex $j$
+with no remaining edge. That vertex is not raised then, and never later, since edges are only ever
+deleted. Distinct passes visit disjoint vertex sets. Consecutive raised vertices of a pass are
+adjacent, so $C$ contains one of each pair, and at most $\lceil L/2 \rceil$ of the pass's raised
+vertices lie outside $C$. The path $i_1, \dots, i_L, j$ has $L + 1$ vertices and so contains
+$\lfloor (L+1)/2 \rfloor = \lceil L/2 \rceil$ pairwise disjoint edges. These paths are
+vertex-disjoint across passes (a terminal has no edge left, so it is never visited or a terminal
+again). So the union of those edges is a matching of $G(p)$, and
+$\sum_{\mathrm{passes}} \lceil L/2 \rceil \le \nu(G(p)) = \tau(G(p))$. Hence the output differs
+from $f$ on at most $|C| + \tau(G(p))$ coordinates. This is the path structure of their Lemma~6.
+Their proof observes that the stepped edges form vertex-disjoint paths (they write ``paths and
+cycles''; only paths arise, since visited vertices are deleted), and uses this, through a
+half-integral matching, to bound the $\ell_1$ movement $\sum_i \delta_i$ within a factor~$2$ of
+their correction LP. We use it to count coordinates; like theirs, the argument never consults the
+tie-breaks.
+
+For the family, $\opt = 5$, the face is the segment from $(2, 2 \mid 0, 0, 1, 0)$ to
+$(3, 2 \mid 0, 0, 0, 0)$, and $\hat y$ agrees with it only at $b_1$. The two violated constraints
+$(a_1, b_1)$ and $(a_2, b_1)$ both have residual $1$. Whichever vertex starts, the walk raises
+$b_1$, alone or together with one row, by $1$, and breaks the one agreement: every output
+differs from the face everywhere. Disjoint copies decouple as in the proof of
+Theorem~\ref{thm:noadditiveclass}.
+\end{proof}
+
+The factor~$2$ is tight in the limit: an explicit \emph{ladder family} forces the walk arbitrarily
+close to it.
+
+\begin{proposition}[Proposition~\ref{prop:walkbound} is tight in the limit for the walk]\label{prop:ladderfam}
+For $m \ge 2$ set $d_m = m + 1$, $d_i = d_{i+1} + i + 1$ for $i < m$, and
+$s_i = d_i - i$ for $i < m$. Take rows $x_1, \dots, x_m$, columns $v_1, \dots, v_m$ with
+\[
+  w_{x_i v_i} = d_i, \qquad w_{x_i v_{i+1}} = d_{i+1}, \qquad w_{x_{i+1} v_i} = s_i
+  \quad (i < m),
+\]
+all other weights $0$, and $\hat y = 0$, so $p = \hat y$. Then $\opt = \sum_i d_i$, the
+optimal face is the polytope
+\[
+  F \;=\; \bigl\{ (\varepsilon \mid d - \varepsilon) \;:\;
+  d_i \ge \varepsilon_i \ge \varepsilon_{i+1} \ge 0, \;\;
+  \varepsilon_i - \varepsilon_{i+1} \le i \bigr\},
+\]
+$\|y^* - \hat y\|_0 = m$, and $G(p)$ consists of all $3m - 2$ positive-weight
+constraints, with $\tau(G(p)) = m$. The walk started at $x_1$ meets no tie, traverses
+$x_1 v_1 x_2 v_2 \cdots x_m v_m$ in a single pass, and ends at face distance exactly
+$2m - 2 = \|y^* - \hat y\|_0 + \tau(G(p)) - 2$: a ratio
+\[
+  \frac{2m - 2}{m} \;\longrightarrow\; 2 .
+\]
+Consequently the walk's worst-case constant under Proposition~\ref{prop:walkbound} is
+exactly $2$ in the limit, like the cover-directed scan's (Proposition~\ref{prop:chainfam}).
+\end{proposition}
+
+\begin{proof}
+\emph{Optimum and face.} The $m$ diagonal constraints pair up the $2m$ coordinates, so
+every feasible $y$ has $\sum y = \sum_i (y_{x_i} + y_{v_i}) \ge \sum_i d_i$; the point
+$(0 \mid d)$ is feasible ($(x_i, v_{i+1})$ reads $0 + d_{i+1} \ge d_{i+1}$ and
+$(x_{i+1}, v_i)$ reads $0 + d_i \ge s_i$), so $\opt = \sum_i d_i$ and every optimal $y$
+is tight on every diagonal constraint: $y = (\varepsilon \mid d - \varepsilon)$ with
+$\varepsilon_i := y_{x_i}$. Under this substitution $(x_i, v_{i+1})$ reads
+$\varepsilon_i \ge \varepsilon_{i+1}$, $(x_{i+1}, v_i)$ reads
+$\varepsilon_i - \varepsilon_{i+1} \le d_i - s_i = i$, the zero-weight constraints follow
+from $y \ge 0$, and $y \ge 0$ is the box $0 \le \varepsilon_i \le d_i$, so $F$ is as
+stated.
+
+\emph{Pre-repair distance.} A face point $(\varepsilon \mid d - \varepsilon)$ agrees with
+$\hat y = 0$ at $x_i$ exactly when $\varepsilon_i = 0$ and at $v_i$ exactly when
+$\varepsilon_i = d_i$, never both, so it disagrees on at least $m$ coordinates;
+$\varepsilon = 0$ attains $m$. Hence $\|y^* - \hat y\|_0 = m$.
+
+\emph{Violated graph.} At $p = 0$ every positive-weight constraint is violated, with
+residual equal to its weight. The diagonal is a perfect matching of $G(p)$ and either
+side of the bipartition is a vertex cover, so $\tau(G(p)) = m$ by K\H{o}nig.
+
+\emph{The run.} Start the walk at $x_1$. Its residuals are $d_1$ at $(x_1, v_1)$ and
+$d_2 < d_1$ at $(x_1, v_2)$, so $\delta_{x_1} = d_1$ and the walk moves to the unique
+attaining neighbour $v_1$. Inductively, suppose the walk arrives at $v_i$ ($i < m$)
+having just deleted $x_i$, with $x_1, v_1, \dots, x_i$ deleted. The edges of $v_i$ were
+$(x_i, v_i)$ and, for $i \ge 2$, $(x_{i-1}, v_i)$ (both endpoints already deleted)
+and $(x_{i+1}, v_i)$, which remains: so $\delta_{v_i} = s_i$, and the walk moves to
+$x_{i+1}$, deleting $v_i$ with that edge. At $x_{i+1}$ the remaining edges are
+$(x_{i+1}, v_{i+1})$, of residual $d_{i+1}$, and (for $i + 1 < m$)
+$(x_{i+1}, v_{i+2})$, of residual $d_{i+2} < d_{i+1}$: so $\delta_{x_{i+1}} = d_{i+1}$
+with unique attaining neighbour $v_{i+1}$. At $v_m$ both incident edges
+$(x_m, v_m)$ and $(x_{m-1}, v_m)$ are already deleted, so the pass ends with $v_m$ never
+raised, and no edge of $G(p)$ remains ($(x_i, v_i)$ and $(x_i, v_{i+1})$
+were deleted at $x_i$, and $(x_{i+1}, v_i)$ at $v_i$), so the walk terminates. No step
+met a tie, so this is a resolution of the walk's free choices, and its output is
+\[
+  z \;=\; (d_1, \dots, d_m \mid s_1, \dots, s_{m-1}, 0).
+\]
+
+\emph{Post-repair distance.} A face point $(\varepsilon \mid d - \varepsilon)$ agrees
+with $z$ at $x_i$ exactly when $\varepsilon_i = d_i$, at $v_i$ with $i < m$ exactly when
+$\varepsilon_i = d_i - s_i = i$, and at $v_m$ exactly when $\varepsilon_m = d_m$. We
+claim at most one index $i$ carries any agreement. Suppose indices $i < j$ both do, at
+values $t_i \in \{d_i, i\}$ and $t_j \in \{d_j, j\}$ (for $j = m$ only $t_j = d_m$
+occurs). Since $\varepsilon$ is non-increasing with steps
+$\varepsilon_k - \varepsilon_{k+1} \le k$,
+\[
+  t_i \ge t_j
+  \qquad\text{and}\qquad
+  t_i - t_j \;\le\; \sum_{k=i}^{j-1} k .
+\]
+If $t_i = i$: both candidates for $t_j$ exceed $i$, since $j > i$ and
+$d_j \ge d_m = m + 1 > i$, contradicting $t_i \ge t_j$. If $t_i = d_i$ and
+$t_j = d_j$: telescoping, $d_i - d_j = \sum_{k=i}^{j-1} (k + 1) > \sum_{k=i}^{j-1} k$,
+contradicting the step bound. If $t_i = d_i$ and $t_j = j$ with $j < m$: then
+$d_i - j - \sum_{k=i}^{j-1} k = d_j + (j - i) - j = d_j - i \ge (m + 1) - i > 0$,
+the same contradiction. So all agreements are at a single index; an index $i < m$
+contributes at most one agreeing coordinate ($d_i \ne i$, as $d_i \ge m + 1 > i$), and
+$i = m$ at most two, namely $x_m$ and $v_m$ together at $\varepsilon_m = d_m$. Hence
+every face point disagrees with $z$ on at least $2m - 2$ coordinates, and
+$\varepsilon \equiv d_m$ (non-increasing with zero steps, inside every box since
+$d_m \le d_i$, and agreeing nowhere else since $d_m = m + 1$ avoids
+$\{i : i < m\} \cup \{d_i : i < m\}$) attains $2m - 2$.
+
+Both distances are minima over the whole face, computed against its exact description,
+so the ratio is $(2m - 2)/m$ under this resolution, and by
+Proposition~\ref{prop:walkbound} no resolution exceeds
+$\|y^* - \hat y\|_0 + \tau(G(p)) = 2m$ on this family.
+\end{proof}
+
+
+\section{Experiments in full}\label{app:experiments}
+
+\citeauthor{chen2022}'s bound is stated in the post-repair $\ell_0$ error, so that is what we
+measure. Their proof counts the tight-subgraph deficiency of the warm-start dual and derives the $\ell_0$
+bound from it, so $\ell_0$ is the parameter of their statement and the deficiency is the finer
+quantity behind it. The solver we instrument is a standard successive-shortest-path (Hungarian)
+solver and is not the algorithm they analyse, so what follows tests whether the post-repair $\ell_0$
+error tracks warm-started work in a solver of this family.
+
+Instances are $n \times n$ assignment problems of three kinds: uniform integer weights, clustered
+(a few high-value blocks), and Euclidean ($w = C - \mathrm{dist}$). An optimal dual is computed by
+LP, and $10\%$ of its coordinates are corrupted up or down to form the prediction.
+Table~\ref{tab:exp} reports the mean post-repair $\ell_0$ error over ten draws per cell. In every
+table the spread is the population standard deviation over the cell's draws (\texttt{numpy}'s
+default, $\mathrm{ddof}=0$). Table~\ref{tab:measure} of Section~\ref{sec:exp} collects the $n = 200$ rows of
+Tables~\ref{tab:exp} and~\ref{tab:solver}, together with the cover-directed scan's cells, which are
+reported in the text below.
+
+\begin{table}[ht]
+\centering
+\caption{Post-repair $\ell_0$ error by repair, against the perturbed reference optimum (an upper
+bound on the face distance; the same reference for every repair). ``pre'' is the prediction's own
+$\ell_0$ error, and the figure in parentheses is the increase over it. The walk uses
+lowest-index start and tie-breaks. Mean ${\scriptstyle\pm}$\,std over ten draws per cell.}
+\label{tab:exp}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+instance & $n$ & pre & sorted & forward & random & walk\\
+\midrule
+uniform   & 100 & $19.9\std{0.3}$ & $21.7\std{1.6}$ \,(+9\%) & $29.4\std{2.9}$ \,(+48\%) & $28.9\std{2.5}$ \,(+45\%) & $\mathbf{17.9}\std{1.3}$ \,($-$10\%)\\
+uniform   & 200 & $39.8\std{0.6}$ & $43.4\std{2.3}$ \,(+9\%) & $54.9\std{4.9}$ \,(+38\%) & $54.7\std{5.9}$ \,(+37\%) & $\mathbf{32.9}\std{3.1}$ \,($-$17\%)\\
+clustered & 100 & $19.9\std{0.3}$ & $22.1\std{2.3}$ \,(+11\%) & $28.1\std{2.5}$ \,(+41\%) & $28.7\std{2.7}$ \,(+44\%) & $\mathbf{17.9}\std{1.2}$ \,($-$10\%)\\
+clustered & 200 & $39.7\std{0.6}$ & $47.9\std{3.6}$ \,(+21\%) & $67.2\std{6.2}$ \,(+69\%) & $64.2\std{8.5}$ \,(+62\%) & $\mathbf{35.3}\std{2.8}$ \,($-$11\%)\\
+euclidean & 100 & $20.0\std{0.0}$ & $23.2\std{1.8}$ \,(+16\%) & $29.4\std{4.9}$ \,(+47\%) & $27.9\std{2.3}$ \,(+40\%) & $\mathbf{17.9}\std{1.4}$ \,($-$11\%)\\
+euclidean & 200 & $39.8\std{0.4}$ & $48.2\std{3.2}$ \,(+21\%) & $63.8\std{6.3}$ \,(+60\%) & $66.2\std{5.3}$ \,(+66\%) & $\mathbf{35.5}\std{1.9}$ \,($-$11\%)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Sorting increases the error less than the forward and random scans at both sizes. Its increase is $9$--$16\%$ against
+$40$--$48\%$ at $n = 100$, and $9$--$21\%$ against $37$--$69\%$ at $n = 200$: a factor of $2.5$ to
+$5.3$ and of $2.9$ to $4.2$ respectively. In coordinates the gap widens with $n$: forward exceeds
+sorted by $6.0$--$7.7$ coordinates at $n = 100$ and by $11.5$--$19.3$ at $n = 200$, in every
+family (the direction is stable across seeds, the exact ranges are not). As a ratio of increases the gap does
+not widen: it narrows for five of the six combinations of family and scan, and the direction of
+that change depends on the seed.
+
+The sorted scan's post-repair error tracks the prediction's own $\ell_0$
+error rather than the instance size, as Proposition~\ref{prop:sortedwarm} proves for $|A| = 1$.
+Its sort costs $O(m \log m)$, negligible beside $O(m\sqrt{n})$.
+
+The design is paired: every
+repair sees the same instances and predictions. Among the scan orders, sorted has the smallest
+mean in all twelve computed cells, the untabulated $n \in \{50, 150\}$ included, and beats forward
+on $117$ of $120$ paired draws (one tie).
+
+The walk has the lowest post-repair $\ell_0$ error in
+every cell. It is below the prediction's own error in all twelve cell means, though not in every
+draw ($108$ of $120$ strictly below, $9$ ties, $3$ above), and sorted never beats it in a paired
+draw of this experiment. Its worst-case $\ell_0$ factor is~$2$ (Proposition~\ref{prop:walkbound}), the same
+as the cover-directed scan's, and unlike the two-sided scans it is not $\ell_1$-non-expansive
+(Section~\ref{sec:exp}).
+
+On the same draws the cover-directed scan of
+Theorem~\ref{thm:coverscan} ends within one coordinate of the prediction's own error in every
+cell mean, between the sorted scan and the walk. At $n = 200$ it gives $39.5 \pm 0.8$,
+$39.1 \pm 0.9$ and $39.7 \pm 0.5$ against $39.8$, $39.7$ and $39.8$ on the three families.
+The same holds under a reversed or a random processing order of the cover. It fires $16$--$18$
+times there while its bound allows $\tau(G(p)) = 19$--$21$, so the bound is loose on these
+instances.
+
+\subsection*{End to end: \texorpdfstring{$\ell_0$}{l0} and the solver's dual adjustments}
+
+We test end to end whether the post-repair $\ell_0$ error predicts the work a warm-started solver
+does. We start the solver from each repaired dual and count \emph{dual adjustments}, the quantity Corollary~\ref{cor:dinitz} bounds by
+the post-repair gap. Alongside the four repairs of
+Table~\ref{tab:exp} we run two members of the $\ell_\infty$-optimal class. One is the uniform
+shift of Observation~\ref{obs:shift} (Appendix~\ref{app:delicate}). The other is the endpoint
+shift, which raises only the endpoints of violated constraints by $\varepsilon/2$ and rounds those
+up. It has the same $\ell_\infty$ displacement as the uniform shift on all $120$ draws but touches
+far fewer coordinates, so the pair isolates the effect of the number of coordinates
+touched. As a baseline we take the row-reduction start
+$u_a = \max_b w_{ab}$, $v = 0$. Table~\ref{tab:solver} reports the counts.
+
+\begin{table}[ht]
+\centering
+\caption{Dual adjustments of the warm-started solver, by starting point (mean
+${\scriptstyle\pm}$\,std over ten draws per cell; instance families and corruption model as in
+Table~\ref{tab:exp}). ``row-red.'' is the row-reduction start, and the walk is as in
+Table~\ref{tab:exp}. The uniform shift (Observation~\ref{obs:shift}) and the endpoint shift have
+the same realised $\ell_\infty$ displacement. Bold marks the cheapest start in a cell when a
+repair achieves it; in the two uniform rows where the row-reduction start is cheapest nothing is
+bolded.}
+\label{tab:solver}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+instance & $n$ & row-red. & sorted & forward & random & walk & \begin{tabular}[b]{@{}r@{}}uniform\\ shift\end{tabular} & \begin{tabular}[b]{@{}r@{}}endpoint\\ shift\end{tabular}\\
+\midrule
+uniform & 50 & $39.9\std{5.6}$ & $28.9\std{6.8}$ & $29.8\std{7.4}$ & $29.8\std{6.4}$ & $\mathbf{17.9}\std{8.1}$ & $63.1\std{7.9}$ & $60.7\std{13.5}$ \\
+uniform & 100 & $48.6\std{4.9}$ & $52.7\std{6.4}$ & $59.3\std{8.5}$ & $60.8\std{6.5}$ & $\mathbf{42.9}\std{5.6}$ & $126.9\std{5.8}$ & $141.8\std{25.8}$ \\
+uniform & 150 & $45.8\std{3.3}$ & $62.3\std{9.1}$ & $76.1\std{11.5}$ & $78.2\std{13.6}$ & $53.2\std{7.8}$ & $179.9\std{7.4}$ & $218.3\std{30.2}$ \\
+uniform & 200 & $42.7\std{3.4}$ & $72.6\std{8.6}$ & $84.7\std{10.2}$ & $83.1\std{11.7}$ & $56.3\std{10.4}$ & $253.1\std{10.1}$ & $252.7\std{27.3}$ \\
+clustered & 50 & $55.8\std{13.4}$ & $24.8\std{6.0}$ & $25.3\std{5.4}$ & $25.7\std{4.4}$ & $\mathbf{17.0}\std{4.8}$ & $63.5\std{5.5}$ & $53.1\std{18.5}$ \\
+clustered & 100 & $131.1\std{29.4}$ & $56.9\std{10.6}$ & $61.9\std{11.0}$ & $62.2\std{11.2}$ & $\mathbf{41.9}\std{8.7}$ & $130.8\std{10.4}$ & $156.5\std{23.0}$ \\
+clustered & 150 & $247.8\std{42.7}$ & $84.0\std{14.6}$ & $96.9\std{12.7}$ & $92.3\std{11.8}$ & $\mathbf{63.2}\std{10.4}$ & $202.7\std{9.6}$ & $243.0\std{20.3}$ \\
+clustered & 200 & $367.2\std{83.1}$ & $120.3\std{13.5}$ & $134.9\std{7.2}$ & $132.6\std{13.1}$ & $\mathbf{95.6}\std{10.7}$ & $281.4\std{11.9}$ & $309.7\std{24.1}$ \\
+euclidean & 50 & $86.4\std{13.1}$ & $28.5\std{11.0}$ & $32.9\std{13.0}$ & $31.3\std{11.7}$ & $\mathbf{24.9}\std{9.5}$ & $70.4\std{8.1}$ & $59.8\std{18.9}$ \\
+euclidean & 100 & $143.1\std{14.2}$ & $65.7\std{10.0}$ & $73.2\std{11.5}$ & $72.9\std{10.3}$ & $\mathbf{50.1}\std{7.9}$ & $135.3\std{10.9}$ & $143.8\std{21.5}$ \\
+euclidean & 150 & $188.5\std{27.6}$ & $88.9\std{8.4}$ & $99.7\std{7.4}$ & $98.2\std{6.5}$ & $\mathbf{70.7}\std{11.3}$ & $211.7\std{10.5}$ & $245.3\std{21.6}$ \\
+euclidean & 200 & $223.8\std{26.2}$ & $115.5\std{15.3}$ & $135.6\std{17.2}$ & $135.5\std{20.2}$ & $\mathbf{95.0}\std{10.5}$ & $265.6\std{10.6}$ & $295.1\std{27.1}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{First, across a set of five repairs, $\ell_0$ ranks them better than the alternatives, but
+not inside one norm class.} The comparison is within an instance: we hold the instance fixed and
+rank the repairs on it. The set consists of the sorted, forward and random scans, the walk and the uniform shift
+(the row-reduction start, the cover-directed scan and the endpoint shift are not in it). Over this
+set, the mean Spearman correlation with the adjustment count is $+0.95$ for the post-repair
+$\ell_0$ error, against $+0.82$ for the $\ell_1$ error, $+0.80$ for the realised $\ell_1$
+displacement and $+0.80$ for the dual gap. The last two coincide: every repair in the set only
+raises coordinates, so the realised $\ell_1$ displacement is the gap plus a per-draw constant. The
+margin is unlikely to be noise: the $\ell_0$ error wins $11$ of the $12$ cells, a one-sided sign-flip
+permutation test over the per-cell differences gives $p = 0.0005$, and a bootstrap over instances
+within the twelve fixed cells puts the difference between the $\ell_0$ and gap correlations at $+0.150$ with $95\%$ CI
+$[+0.124, +0.174]$. Pooled over all $600$ points, the three quantities tie ($+0.9005$, $+0.9001$,
+$+0.8998$). Pooling mixes in the size effect, which moves every repair together, so only the
+within-instance comparison tells them apart. The margin also depends on the set: adding the
+endpoint shift cuts $\ell_0$'s lead over the gap from $+0.150$ to $+0.085$, a $43\%$ reduction,
+without reversing it. We therefore claim only that, among the quantities a repair can
+guarantee, $\ell_0$ best predicts the solver's dual adjustments across this set of five repairs.
+
+\emph{Second, both members of the $\ell_\infty$-optimal class that we run are expensive, and
+$\ell_0$ does not rank inside it.} On uniform weights the uniform shift costs more than the
+row-reduction start at every size, $5.9\times$ more at $n = 200$ ($253.1$ adjustments against
+$42.7$). Across the twelve cells it exceeds the row-reduction start in seven. The endpoint shift also loses to the row-reduction start at every uniform size. But
+the pair does not follow the first finding's ranking. The endpoint shift has strictly smaller post-repair $\ell_0$ error (between $0.34$ and
+$0.76$ of the uniform shift's) and strictly smaller dual gap ($0.30$ to $0.72$) in all
+twelve cells, yet it costs the solver more adjustments in eight of them ($141.8$ against $126.9$ at
+uniform $n = 100$; $218.3$ against $179.9$ at $n = 150$). Neither $\ell_0$ nor the gap therefore
+ranks these two correctly, and $\ell_\infty$-optimality is not the property that makes the
+uniform shift expensive. We cannot explain this reversal, and it limits the first finding. We can
+prove why both shifts are expensive: the cause is which edges are tight, and the size of
+$\varepsilon$ does not enter.
+
+\begin{proposition}[Each row without a tight edge costs an adjustment]\label{prop:tightrows}
+Started from any feasible $(u \mid v)$, fractional or not, the solver of Table~\ref{tab:solver}
+performs at least $U(u,v) = |\{a \in A : \min_b\, (u_a + v_b - w_{ab}) > 0\}|$ dual adjustments, one for every row that has no tight edge at the start. (In exact arithmetic; the implementation counts a step, and tests tightness, against a tolerance of $10^{-9}$, which replaces $0$ throughout.)
+\end{proposition}
+\begin{proof}
+The solver is the successive-shortest-path method: phase $a$ grows an alternating tree of tight
+edges from the unmatched row $a$, and when the tree is stuck it lowers $u$ on the tree's rows and
+raises $v$ on its columns by the smallest positive slack leaving the tree, counting one adjustment.
+So $u$ only decreases and $v$ only increases, and the tree of phase $a$ contains, besides $a$,
+only rows matched in earlier phases; hence $u_a$ is untouched before phase $a$, and if $a$ had no
+tight edge at the start then at the start of its phase every slack $u_a + v_b - w_{ab}$ is at
+least its initial positive value, so the phase's first step is an adjustment. Distinct rows have
+distinct phases.
+\end{proof}
+
+\begin{corollary}\label{cor:shiftrows}
+For integral duals, the uniform shift with an odd largest violation $\varepsilon$ raises every
+slack by $\varepsilon + 1 > \varepsilon$, so it leaves no tight edge and forces at least $|A|$
+adjustments, however small $\varepsilon$ is; with $\varepsilon$ even every slack rises by exactly
+$\varepsilon$, and the only tight edges left are the maximally violated constraints. With $\varepsilon$ odd the endpoint shift leaves every touched row without a tight edge and forces at least their number; with $\varepsilon$ even, at the touched rows it too leaves tight exactly the maximally violated constraints, so it forces at least the number of touched rows not incident to one. The row-reduction start has $U = 0$.
+\end{corollary}
+\begin{proof}
+Let $(u \mid v)$ be the clamped integral prediction. Since $w$ is integral, every slack
+$u_a + v_b - w_{ab}$ is an integer of at least $-\varepsilon$, with equality exactly on the
+maximally violated constraints. The uniform shift adds $\lceil\varepsilon/2\rceil$ to every
+coordinate, so it adds $2\lceil\varepsilon/2\rceil$ to every slack: $\varepsilon + 1$ for odd
+$\varepsilon$ and $\varepsilon$ for even $\varepsilon$. The endpoint shift adds the same
+$2\lceil\varepsilon/2\rceil$ to an edge with both endpoints touched. An edge from a touched row to
+an untouched column was not violated, since both endpoints of a violated constraint are touched, so
+its slack was non-negative and becomes at least $\lceil\varepsilon/2\rceil \ge 1$. So for odd
+$\varepsilon$ no touched row keeps a tight edge, and for even $\varepsilon$ the tight edges at a
+touched row are exactly the maximally violated constraints incident to it. The row-reduction start
+makes a heaviest edge of every row tight. Proposition~\ref{prop:tightrows} turns each row without a
+tight edge into one adjustment.
+\end{proof}
+
+On the $120$ draws of Table~\ref{tab:solver}, $\varepsilon$ is odd in $62$, and there the
+uniform shift has $U = |A|$ exactly. $U$ accounts for $70$--$83\%$ of its adjustments in every
+cell, against $22$--$45\%$ for the scans and the walk. The endpoint shift's $U$ runs from
+$0.41|A|$ to $0.93|A|$ in cell means ($0.12|A|$ to $1.00|A|$ across individual draws). The
+count $U$ explains the first half of the second finding: with odd $\varepsilon$ the uniform shift
+needs one adjustment per row before it does anything else, while the row-reduction start, which
+leaves a tight edge in every row, needs none. It does not explain the second half: $U$ is smaller for
+the endpoint shift than for the uniform shift in $119$ of the $120$ draws, so the endpoint shift's
+extra adjustments come from the later steps of the phases. As a ranking, $U$ is nearly as good as
+$\ell_0$: within an instance, over the same five repairs, it correlates with the adjustment count
+at $+0.93$, against $\ell_0$'s $+0.95$ and the gap's $+0.80$.\footnote{One consequence of Proposition~\ref{prop:tightrows} separates the gap from the count. From any optimal dual the solver adjusts nothing, since its tight graph contains a perfect matching. From $(u^* + t \mid v^* + t)$ it adjusts exactly $|A|$ times, once per row, for every $t > 0$ above the implementation's tolerance, while the gap is $2|A|t$. For integral duals the count is bounded by the gap, by the argument of Corollary~\ref{cor:dinitz}: each adjustment lowers $\sum_a u_a + \sum_b v_b$ by an integer $\delta \ge 1$ while the dual value stays at least $\opt$. For fractional starts, in exact arithmetic, no function of the gap or of any $\ell_p$ displacement bounds the count. Only the dimension does, trivially: at most one adjustment per step of a phase, so at most $|A||B|$. (The implemented counter, with its tolerance $\theta = 10^{-9}$, satisfies $\mathrm{adj} \le g/\theta$, so its discontinuity is at the scale of $\theta$.)}
+
+\emph{Third, a $10\%$-corrupted optimum is not always a better start than the row-reduction
+start.} On uniform weights the row-reduction start beats every scan-order repair from
+$n = 100$ on, and every repair, the walk included, at $n \in \{150, 200\}$. Warm-starting helps
+where the row-reduction start is weak (clustered: $367.2$ adjustments from it against $95.6$ for
+the best repair at $n = 200$, a difference far outside the $\pm 83.1$ of that cell, the largest spread in
+the table). The cold start of
+Proposition~\ref{prop:sortedcold} (repair the zero prediction) is a structural result and we do
+not recommend it: as a solver start it loses to the row-reduction start by $1.4$--$7.3\times$ across
+these families. The walk is again the cheapest repair start in every cell, now on solver work. The
+cover-directed scan is the repair with both a guarantee
+and a measured $\ell_0$ increase near zero. As a start on the same draws it costs
+$66.6 \pm 9.7$, $110.4 \pm 11.0$ and $110.2 \pm 15.0$ adjustments at $n = 200$ on the three
+families, against the sorted scan's $72.6$, $120.3$ and $115.5$ and the walk's $56.3$, $95.6$ and
+$95.0$. It lies between the two in all twelve cells, beating the sorted scan on $95$
+of $120$ draws and the walk on $4$.
+
+Among the scan orders, the $\ell_0$ differences of Table~\ref{tab:exp} do carry through to solver
+work. Sorted has the smallest mean in all twelve cells of Table~\ref{tab:solver} as well, and beats
+forward on $104$ of $120$ paired draws ($5$ ties), with per-cell mean margins from $0.5$ to $20.1$
+adjustments. The exact one-sided sign test on the $115$ nonzero differences gives
+$p = 1.9\times10^{-20}$ (the signed-rank test agrees, but its normal approximation is unreliable
+this far in the tail). This is a comparison among scan orders only, and the walk is not one of them.
+
+\paragraph{The algorithm the bound is about.} \citeauthor{chen2022}'s solver (their Algorithm~1)
+is itself of the successive-shortest-path family: a maximum-cardinality matching on the tight subgraph of $\hat y'$, then repeated
+phases of Dijkstra and maximum flow. We implemented it line by line and ran it on the same $120$ draws and
+the same repaired duals.
+
+One quantity we measure is the deficiency $n - |M|$ of the tight subgraph after its line~4, the quantity their
+proof counts. It is the flow the algorithm must still push, and the maximality of $M$ determines it
+from $\hat y'$ alone. Over the same five repairs, post-repair $\ell_0$ ranks it at $+0.98$, against
+$+0.82$ for the $\ell_1$ error and $+0.81$ for the gap, with $\ell_0$ strictly best in all twelve
+cells. Of the repair pairs that $\ell_0$ orders strictly, only $0.9\%$ come out reversed. As with
+the adjustments, the result depends on the set of repairs: adding the endpoint shift raises all three ($+0.99$, $+0.90$,
+$+0.89$) and cuts $\ell_0$'s lead over the gap from $+0.177$ to $+0.100$, without reversing it.
+
+The other is the number of while-loop iterations, which their $(m + n\log n)$ factor multiplies.
+Their Lemma~B.9 bounds it by $\ell_0$, but it is a phase count, with a median well below $\ell_0$
+here. $\ell_0$ does not rank this count: it scores $+0.58$, against $+0.61$ for the $\ell_1$ error
+and $+0.60$ for the gap, with $17.6\%$ of the strictly $\ell_0$-ordered pairs reversed and a
+further $18.6\%$ tied. The pseudocode also leaves this count open: line~12 asks for a ``shortest
+path distance in $G_f$'' without saying whether the residual arcs out of $t$ enter the Dijkstra,
+and line~16 does not say which maximum flow it returns. The count therefore depends on the
+implementation, unlike the deficiency. Under the other reading $\ell_0$ does not lead either; we
+quote no single figure for it. On total counted work, which on these instances is dominated by the
+Dijkstra term rather than the Ford--Fulkerson one, $\ell_0$ again does not lead ($+0.47$ against
+$+0.54$).
+
+\subsection*{The regime where Theorem~\ref{thm:sharpwarm} has content}
+
+Theorem~\ref{thm:sharpwarm} has content only when
+$\|y^* - \hat y\|_0 \le \bigl||B| - |A|\bigr|$, so Table~\ref{tab:rect} measures rectangular
+instances with $\min(|A|,|B|) \ll \max(|A|,|B|)$. All $80$ draws are well inside that regime
+($\|y^* - \hat y\|_0$ runs from $13$ to $37$, against $\bigl||B|-|A|\bigr|$ between $280$ and
+$597$), so the theorem has content on the whole table. It is also loose there: it allows an
+increase of $2\min(|A|,|B|)-1$, between $5$ and $39$, where the sorted scan has none.
+
+In cell means every scan lies within one standard deviation of the
+prediction's own error and of the others. Cell means are the wrong statistic here, because the
+design is paired. All four
+repairs see the same instance and the same corrupted prediction, and
+the spread within a column comes from the draws: the sorted column's spread equals
+that of pre in all eight cells (the table does not print it), because the two agree draw for draw.
+Of the $80$ draws, $49$ are no-ops: on these very unbalanced
+shapes a $10\%$ corruption often leaves the prediction already feasible, and then every repair is
+the identity. They range from $2$ of $10$ at $20\times300$ to $10$ of $10$ on clustered
+$3\times600$, whose row is therefore degenerate, and they add a tie to every comparison
+and nothing else. On the remaining $31$ draws the orders separate with no exception in
+either direction. The sorted scan ends at exactly $\|y^*-\hat y\|_0$ on all $31$: an increase
+of $0$, against the $2\min(|A|,|B|)-1$ the theorem allows. The forward scan is strictly
+worse on $22$ of the $31$ and never better, the random scan on $25$ and never better. The walk is
+strictly below the prediction's own error on $30$ and never above it, so it beats the sorted scan
+on $30$ draws and loses on none, the same ordering as in the solver table. Since every nonzero
+difference has the same sign, the exact one-sided signed-rank test coincides with the sign test and
+returns $2^{-22}$, $2^{-25}$ and $2^{-30}$ respectively.
+
+The sorted scan's equality does not come from inaction: on all $31$ draws it moves between $2$ and
+$6$ coordinates, and its wrong set differs from the prediction's on every one, making $42$ wrong
+coordinates correct and $42$ correct coordinates wrong across the $31$. But all these $\ell_0$
+figures are distances to the fixed perturbed reference optimum, whereas
+Theorem~\ref{thm:sharpwarm} measures distance to the optimal face, and on $21$ of the $31$ draws that face is not a single
+point. The equality is therefore evidence for additivity with constant $0$ in this regime; it does not
+measure the face distances that the theorem bounds.
+The absence of exceptions is a property of this pinned stream:
+re-running the same design at other seeds gives occasional exceptions in every direction (at seed
+$101$ the sorted scan exceeds $\|y^*-\hat y\|_0$ on $2$ of $32$ non-no-op draws and the walk loses
+one; at seed $303$ the walk loses two; at seed $404$ the sorted scan loses one draw to the forward
+scan). Across seeds the direction and the margins are stable, but the absence of exceptions is not.
+Order-induced increases in $\ell_0$ error happen on balanced instances, where Theorem~\ref{thm:balancedlb}
+shows that the repair itself can cause them.
+
+The uniform shift, left out of Table~\ref{tab:rect}, has mean
+post-repair $\ell_0$ error between $89$ and $260$ on the seven rows where any draw was
+infeasible, against at most $33$ for every scan, with standard deviations from $\pm121$ to $\pm221$.
+This reflects the dependence of its single global $\varepsilon$ on the worst violated constraint.
+At this scale Lemma~\ref{lem:budget} is vacuous, so we claim no face distance for the uniform shift.
+
+\begin{table}[ht]
+\centering
+\caption{Post-repair $\ell_0$ error on unbalanced instances, where Theorem~\ref{thm:sharpwarm} has
+content (mean ${\scriptstyle\pm}$\,std over ten draws per cell; ``walk'' as in
+Table~\ref{tab:exp}; the uniform shift is discussed in the text). ``no-ops'' counts the draws of
+each row whose corrupted prediction was already feasible, so that every repair is the identity
+($49$ of the $80$ draws). The cell means therefore look flat; read the table per draw (see
+text).}
+\label{tab:rect}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+instance & shape & $|A|{+}|B|$ & $2\min{-}1$ & no-ops & pre & sorted & forward & random & walk\\
+\midrule
+uniform & $5\times500$ & $505$ & $9$ & $8/10$ & $24.6$ & $24.6\std{3.6}$ & $24.9\std{3.8}$ & $25.2\std{4.0}$ & $24.3\std{3.6}$ \\
+uniform & $10\times400$ & $410$ & $19$ & $6/10$ & $22.0$ & $22.0\std{2.9}$ & $23.2\std{3.4}$ & $23.5\std{3.4}$ & $21.3\std{3.2}$ \\
+uniform & $20\times300$ & $320$ & $39$ & $2/10$ & $17.2$ & $17.2\std{2.3}$ & $19.0\std{3.1}$ & $19.0\std{3.3}$ & $16.3\std{2.6}$ \\
+uniform & $3\times600$ & $603$ & $5$ & $9/10$ & $32.2$ & $32.2\std{3.0}$ & $32.6\std{3.4}$ & $32.2\std{3.0}$ & $32.1\std{2.9}$ \\
+clustered & $5\times500$ & $505$ & $9$ & $7/10$ & $22.7$ & $22.7\std{3.0}$ & $23.2\std{3.2}$ & $23.1\std{3.4}$ & $22.3\std{3.0}$ \\
+clustered & $10\times400$ & $410$ & $19$ & $5/10$ & $21.6$ & $21.6\std{2.4}$ & $22.4\std{2.3}$ & $22.5\std{2.5}$ & $21.1\std{2.5}$ \\
+clustered & $20\times300$ & $320$ & $39$ & $2/10$ & $16.9$ & $16.9\std{2.9}$ & $18.2\std{3.5}$ & $18.8\std{3.8}$ & $16.0\std{2.8}$ \\
+clustered & $3\times600$ & $603$ & $5$ & $10/10$ & $32.3$ & $32.3\std{2.5}$ & $32.3\std{2.5}$ & $32.3\std{2.5}$ & $32.3\std{2.5}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Drifted predictions}
+
+Corrupting a fraction of the true optimum is the standard experiment in this line, but a
+prediction in practice is more likely to be the dual of an earlier instance. Table~\ref{tab:drift} re-runs the solver
+experiment with predictions obtained by solving one instance, moving every weight by a random
+integer between $-10$ and $10$ and clipping the result at $0$ (the bound $10$ is about a tenth of the
+range of the uniform and Euclidean weights), and predicting the new dual by the old one. Under drift the $\ell_0$ error saturates
+($114.7$ of $120$ coordinates at $n = 60$): drift perturbs every dual coordinate a little, which is
+the error structure the $\ell_0$ parameterisation has nothing to say about. This limits every
+$\ell_0$-parameterised bound in this line, ours included. The ranking of
+the repairs also compresses (the walk is still first among them in every cell), while the
+row-reduction start wins four of the six cells, three of them by more than one standard deviation.
+The fourth, euclidean $n = 60$, is inside the noise ($79.2 \pm 13.6$ against the walk's
+$82.4 \pm 7.9$), and the row-reduction column remains the most variable. The scan-order ranking of
+Table~\ref{tab:solver} does not hold under drift either: the sorted scan has the largest mean of the
+three scans in five of the six cells and the smallest in none.
+
+\makeatletter\setlength{\@fptop}{0pt}\makeatother
+\begin{table}[ht]
+\centering
+\caption{Dual adjustments under drifted predictions: the previous instance's optimal dual
+predicts the drifted instance's (mean ${\scriptstyle\pm}$\,std over ten draws per cell).
+Columns are as in Table~\ref{tab:solver} without the endpoint shift, plus ``pre'', the prediction's
+own $\ell_0$ error, near-saturated at every size.}
+\label{tab:drift}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+instance & $n$ & pre & row-red. & sorted & forward & random & walk & \begin{tabular}[b]{@{}r@{}}uniform\\ shift\end{tabular}\\
+\midrule
+uniform & 60 & $114.7$ & $65.3\std{6.8}$ & $95.1\std{4.4}$ & $95.5\std{4.5}$ & $94.8\std{4.6}$ & $77.1\std{7.4}$ & $103.3\std{6.6}$ \\
+uniform & 120 & $226.0$ & $101.4\std{8.1}$ & $183.8\std{7.4}$ & $182.6\std{5.2}$ & $177.7\std{5.5}$ & $164.1\std{5.8}$ & $185.5\std{6.4}$ \\
+clustered & 60 & $116.1$ & $104.3\std{22.8}$ & $99.1\std{6.0}$ & $96.3\std{6.4}$ & $94.8\std{6.2}$ & $83.5\std{7.4}$ & $101.5\std{6.3}$ \\
+clustered & 120 & $230.6$ & $277.4\std{56.8}$ & $189.8\std{6.3}$ & $185.1\std{6.2}$ & $180.3\std{7.0}$ & $164.8\std{10.0}$ & $191.5\std{8.4}$ \\
+euclidean & 60 & $114.5$ & $79.2\std{13.6}$ & $98.8\std{5.8}$ & $95.7\std{5.9}$ & $91.6\std{5.9}$ & $82.4\std{7.9}$ & $102.9\std{4.9}$ \\
+euclidean & 120 & $226.4$ & $146.0\std{18.6}$ & $195.4\std{8.0}$ & $192.6\std{6.7}$ & $184.0\std{6.8}$ & $170.2\std{8.6}$ & $190.9\std{3.4}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\clearpage
+\section{Reproducibility}\label{app:repro}
+
+\paragraph{Code, licence and environment.} Every theorem check, every table and every displayed
+constant in this paper is regenerated by the code at \coderepo, released under the \codelicence{} licence. It
+does this with seven Python programs. Each program runs as
+\texttt{python3 <file>} with no arguments, and every configuration and seed is pinned in the file.
+\texttt{verify\_all.py} needs only the Python standard library; every other program needs NumPy
+\citep{harris2020} and SciPy \citep{virtanen2020}. The code was tested with Python~3.10,
+NumPy~1.26 and SciPy~1.15, on an Apple M3 Pro laptop (12 cores, 36\,GB RAM, macOS), CPU only, and
+the times below refer to that machine.
+
+\paragraph{The programs.}
+\begin{itemize}
+\item \texttt{verify\_all.py} (standard library only; about five minutes): every exhaustive
+check, namely non-expansion in each norm (Theorems~\ref{thm:nonexp} and~\ref{thm:pack},
+Corollary~\ref{cor:lip}), the two failing repairs of Proposition~\ref{prop:fail}, the
+order-dependence table (Table~\ref{tab:order}) including its $\ell_\infty$ and $\ell_\infty^\pm$
+columns, the cold-start sweep, the sorted-scan warm-start sweep, the sharpness family of
+Proposition~\ref{prop:sharpattained}, and the witness and sweep of
+Section~\ref{sec:exp} that compare the walk with the sorted scan.
+\item \texttt{experiments.py} (about $20$ seconds): Table~\ref{tab:exp}, from a pinned
+configuration.
+\item \texttt{solver.py} (about $3$ seconds): the warm-startable successive-shortest-path solver
+of Appendix~\ref{app:experiments} and its correctness suite.
+\item \texttt{experiments\_itcs.py} (about two minutes): Tables~\ref{tab:solver},
+\ref{tab:rect} and~\ref{tab:drift}, the correlation figures and their significance tests, the
+paired comparison of the sorted and forward scans with its exact sign test, the per-draw
+analyses of Table~\ref{tab:rect} with the alternate-seed runs, the cold-start comparison,
+and the tight-row count $U$ of Proposition~\ref{prop:tightrows}.
+\item \texttt{verify\_balanced.py} (about one minute): Theorem~\ref{thm:balancedlb} on
+$\mathcal{B}_n$, the $\ell_\infty$ and $\ell_\infty^\pm$ reversal on the same family, and the
+$\ell_1$ distance to the optimal face, equal for both orders.
+\item \texttt{chen\_alg1.py} with \texttt{measure\_chen.py} (about one minute): a line-by-line
+implementation of \citeauthor{chen2022}'s solver (their Algorithm~1 in \texttt{arXiv:2204.12055v1}) and the
+deficiency and iteration-count measurements on the draws of Table~\ref{tab:solver}.
+\item \texttt{verify\_dichotomy.py} (about twelve minutes; imports \texttt{solver.py},
+\texttt{experiments.py} and \texttt{experiments\_itcs.py}): the results of
+Section~\ref{sec:composition} and Appendix~\ref{app:dichotomy}, Lemma~\ref{lem:balancedface}, the
+cold-start results of Appendix~\ref{app:sorted}, Proposition~\ref{prop:tightrows}, and the
+cover-directed cells of Table~\ref{tab:measure}; details below.
+\end{itemize}
+The seven programs together take about twenty minutes. The repository also holds exploratory
+scripts and checks that this paper does not use.
+
+\paragraph{Table labels in the programs' output.} The repository's README maps the labels in the
+programs' output to this paper's numbering. Table~\ref{tab:measure} of Section~\ref{sec:exp}
+collects the $n = 200$ rows of Tables~\ref{tab:exp} and~\ref{tab:solver}; its cover-directed cells
+are printed by \texttt{verify\_dichotomy.py}, which imports both pinned streams.
+
+\paragraph{Validation.} \texttt{solver.py} is verified against an exact reference
+(SciPy's \texttt{linear\_sum\_\allowbreak{}assignment}) on $1{,}954$ instances, all of which match
+exactly. They come from $333$ weight matrices spanning dense, heavily degenerate (all-equal,
+$\{0,1\}$, small-alphabet, constant-row, rank-one and large tie-block) and sparse, near-disconnected
+families, each solved from several feasible starting duals, $1{,}293$ of them warm. The suite also
+checks invariants of the adjustment counter as well as its output. On all $1{,}954$ runs the solver
+performs exactly $n$ augmenting phases, and, since the data are integral, the reported number of
+dual adjustments never exceeds the initial dual gap $\sum_i u^0_i + \sum_j v^0_j - \opt$, as
+Corollary~\ref{cor:dinitz} requires. (The solver is a square-matrix routine, so the rectangular
+experiment of Table~\ref{tab:rect} reports no solver work.)
+The implementation of \citeauthor{chen2022}'s solver performs $1{,}560$ solves on the stream
+of Table~\ref{tab:solver}. It returns an optimal matching on each of the $1{,}440$ whose
+weight is checked against \texttt{scipy.optimize.linear\_sum\_assignment}; the $120$ solves from
+the row-reduction start are run but not weight-checked. At runtime it is checked against that
+paper's Lemma~B.5 at the base case and at every matched edge, and against Lemmas~B.6, B.8 and B.9
+throughout. The exhaustive per-iteration B.5 sweep is available under \texttt{check=True} and is
+off in the pinned run.
+
+The non-expansion checks all return zero violations with maximum ratio exactly 1.000000.
+They cover $7.7\times10^5$ comparisons per norm for $p \in \{1, 1.5, 2, 3, \infty\}$
+(Theorem~\ref{thm:nonexp}), $1.0\times10^6$ bipartite and $9.8\times10^5$ non-bipartite comparisons
+for the covering case, and $8.2\times10^5$ for the packing mirror (Theorem~\ref{thm:pack}).
+Corollary~\ref{cor:lip}'s two-input Lipschitz property is checked separately, on $36{,}000$
+comparisons ($6{,}000$ per norm for $p \in \{1,1.5,2,3,7,\infty\}$ over $2{,}974$ bipartite and
+$3{,}026$ non-bipartite systems, predictions allowed negative entries): again zero violations,
+maximum ratio exactly $1.000000$. For Proposition~\ref{prop:fail} the same search reports
+$155{,}270$ violations for the alternating projection and $37{,}674$ for the integral split
+variant, with ratios reaching $3$ on those small instances. The two explicit families of its proof
+are checked through $k = 12$ and drive the ratio to $|V| - 1$ and $|V|$ respectively, as the proof
+predicts.
+
+\texttt{verify\_balanced.py} checks Theorem~\ref{thm:balancedlb} on $\mathcal{B}_n$ for
+$n = 2, \dots, 8$: $\opt = n^2$, pre-repair face distance $1$, and post-repair face distance $n$
+with $n$ firings under every weakly-descending order. The orders are enumerated exhaustively for
+$n \le 4$ ($20{,}736$ orders at $n = 4$) and sampled otherwise; the order-independence itself is
+proved in Step~3 of the theorem. It also checks that the increasing scan ends at distance $1$,
+while the dual gap, the realised $\ell_1$ displacement and the $\ell_1$ distance to the optimal
+face (equal to $n$) are identical for the two orders. Its face distances are also exact minima over
+the fractional optimal face, computed as a mixed-integer program.
+
+\texttt{verify\_dichotomy.py} runs in numbered sections, each of which ends by reporting that all
+its assertions hold. It checks the following.
+\begin{itemize}
+\item Theorem~\ref{thm:noadditiveclass}. It certifies the gadget: singleton face by the LP extremes
+of every coordinate; the four agreement linear programs infeasible, so the conclusion holds over
+real outputs; for two copies, exactly one admissible integral point in the box, at distance $8$
+from $6$, reached by every scan order and by all $34{,}560$ weakly-descending tie-breaks. It runs
+the exhaustive search of Remark~\ref{rem:noadditivescope}: $201$ witnesses on $1 \times 3$
+systems, none on $1 \times 2$, every one saturating with ratio $4/3$ and confirmed over real
+outputs by linear programming, the gadget among the three minimal ones.
+\item Theorem~\ref{thm:coverscan}. The cover-directed scan runs on $3{,}000$ random bipartite
+instances over every minimum cover, every processing order and every tie among largest residuals
+($6{,}082$ outputs, all checked against the sharp bound $\|y^* - \hat y\|_0 + |S|$; the maximum
+ratio on this sample is $4/3$). The maximal-matching variant runs on the same instances and on
+$500$ non-bipartite systems (face distances there by half-integral enumeration, cross-checked
+against linear programs over the fractional face; maximum ratio $2$ on that sample). A hill-climb
+witness attains the additive term at ratio $7/4$ (section [2b]).
+\item Proposition~\ref{prop:walkbound}. The walk runs over all $10{,}270$ tie-break resolutions of
+$3{,}000$ instances (maximum ratio $5/3$ on that sweep), on its family and two copies of it under
+every resolution, and on the $3 \times 4$ witness of Section~\ref{sec:exp}, with its reachable set
+$\{2,3,4,6\}$.
+\item Proposition~\ref{prop:ladderfam}. The ladder family is verified through $m = 7$ ($\opt$, the
+pre-repair distance $m$, $\tau = m$, and the designed run's distance $2m-2$, all as exact minima
+over the fractional face), with every walk resolution enumerated for $m \le 6$ and the worst always
+exactly $2m-2$ (section [14]).
+\item Lemma~\ref{lem:balancedface}. The face of $\mathcal{B}_n$ is verified for $n \le 12$ by
+linear programming, with the $\ell_\infty$ and $\ell_\infty^\pm$ values of
+Remark~\ref{rem:balancedorder} and all weakly-descending and weakly-increasing tie-breaks for
+$n \le 6$.
+\item Proposition~\ref{prop:tightrows} and Corollary~\ref{cor:shiftrows}: the tight-row bound on
+$360$ starts and the parity of $\varepsilon$ on $120$ instances.
+\item Table~\ref{tab:exp}. Importing \texttt{experiments.py}'s pinned stream, it reproduces the six
+tabulated rows to the printed digit, alongside the cover-directed scan's cells.
+\item Theorem~\ref{thm:composed}. The packing mirror of the cover-directed scan is checked over
+every cover, order and tie on $200$ random square instances, against the unbounded fractional face.
+\item Table~\ref{tab:solver}. From \texttt{experiments\_itcs.py}'s pinned stream, it reproduces
+the row-reduction, sorted and walk cells at $n \in \{100, 200\}$ to the printed digit, alongside the
+cover-directed start's adjustments.
+\item Theorem~\ref{thm:threehalves}. The family of (b) is recomputed from the $2^k$ points $y_x$ of its proof
+alone for $k \le 4$. The bound $r + \lfloor r/2 \rfloor$ of (a) is checked against the exact
+minimum over admissible outputs on every $1 \times 2$ and $1 \times 3$ instance with weights and
+predictions in $\{0, \dots, 4\}$ and on random near-face instances, together with the two-round
+construction itself. The exact minimum is computed by linear programming over the polytope
+$\{z \in \dfeas : e(z) \le 0\}$, with $e$ expanded over all sign vectors.
+\item Proposition~\ref{prop:faceadditive}: its factor~$2$ is exercised numerically (section [7]).
+\item Proposition~\ref{prop:chainfam}: the chain family for $k \le 8$.
+\item Theorem~\ref{thm:coldfivehalves}. It checks $\lfloor 5\min(|A|,|B|)/2 \rfloor$ against every
+tie-break's cold output on $300$ random instances and the $4 \times 5$ witness, with exact face distances
+(section [17]). For the further parts it checks the families of
+Proposition~\ref{prop:coldfamilies}, with LP-exact face distances, unique optimal duals and
+order-free cold outputs; the six cold outputs of the $6 \times 8$ witness at face distances $11$ to
+$14$, by an exact mixed-integer program validated against integral enumeration; and the bound
+$\lfloor 5\min(|A|,|B|)/2 \rfloor - 1$ on $355$ cold outputs over every tie-break (section [20]).
+\item Proposition~\ref{prop:coldrefuted}: the witness and its direct-sum growth (section [12]).
+\end{itemize}
+Most of its running time goes to Theorems~\ref{thm:threehalves} and~\ref{thm:coldfivehalves} and the ladder family.
+
+\paragraph{Exactness and order-robustness.} All $\ell_0$, $\ell_1$ and $\ell_\infty$ figures in
+Table~\ref{tab:order}, and the cold-start sweep, are computed exactly as minima over the full
+optimal face. The $\ell_0$ and $\ell_1$ figures come from enumerating the integral face, which the
+total-unimodularity argument of Appendix~\ref{app:early} justifies for those two norms only. The
+$\ell_\infty$ and $\ell_\infty^\pm$ figures come from exact rational minimisation over the full
+continuous face (the text derives the same two values in closed form). The corresponding figures
+for $\mathcal{B}_n$ are derived in closed form in Remark~\ref{rem:balancedorder} and recomputed by
+\texttt{verify\_balanced.py} by linear programming over the same full face. The witness of Section~\ref{sec:exp}
+that compares the walk with the sorted scan, and its $400$-instance sweep, are also recomputed in
+\texttt{verify\_all.py}, with exact face distances. The witnesses of Appendix~\ref{app:sorted} are
+verified exactly under every weakly-descending tie-break order (zero-weight pairs come last in
+any such order and provably never fire, so enumerating the permutations of the positive weights is
+exhaustive), as is the sharpness family of Definition~\ref{def:sharpfam} through
+$\min(|A|,|B|) = 12$. Where we claim order-robustness the output is a single point, the sharpness
+family and the $3\times4$ cold witness included. The one exception is the $2\times6$ warm witness,
+which attains its increase of $3$ under $48$ of its $144$ weakly-descending orders and $1$ under the rest;
+for it we claim only that the increase is reached. A randomised sweep
+($500$ instances per envelope, shapes up to $4 \times 4$) reports maximum slack $-1$ and $-2$
+against $2\min(|A|,|B|)$ and Theorem~\ref{thm:sharpwarm}; the first envelope is the one
+Proposition~\ref{prop:coldrefuted} breaks at $4 \times 5$. \texttt{verify\_all.py}'s two
+independent face routines (exact minimisation over the fractional face and brute-force enumeration
+of the integral face) agree on $9{,}000$ (instance, point) pairs, and its matching routine agrees
+with brute force on $3{,}000$ instances.
+
+\paragraph{Main commands.}
+\begin{verbatim}
+python3 verify_all.py       # no violation, largest ratio exactly 1.000000
+python3 verify_balanced.py  # distance 1 becomes n, every descending order
+python3 verify_dichotomy.py # sections end 'all assertions in [k] hold'
+python3 measure_chen.py     # Chen et al.'s Algorithm 1 on the solver draws
+python3 solver.py           # all 1954 instances match the SciPy optimum
+python3 experiments.py      # the post-repair l0 table
+python3 experiments_itcs.py # solver, unbalanced, drift tables, statistics
+\end{verbatim}

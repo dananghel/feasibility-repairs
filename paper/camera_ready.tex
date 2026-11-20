@@ -1,0 +1,29 @@
+\documentclass{article}
+\input{preamble}
+\hypersetup{pdftitle={Not All Feasibility Repairs Are Equal: Non-Expansive Retractions for Warm-Started Solvers}, pdfauthor={Dan Anghel}}
+
+\begin{document}
+
+\maketitle
+
+% The abstract and Sections 1 to 8, which form the eight-page body.
+\IfFileExists{body.tex}{\input{body}}{}
+
+% Required in the NeurIPS final version. It does not count toward the page limit.
+\begin{ack}
+This work received no external funding. The author declares no competing interests.
+\end{ack}
+
+\IfFileExists{refs.tex}{\input{refs}}{}
+
+\appendix
+% Appendices A to G. The first file holds Appendices A to D and the second holds E to G.
+\IfFileExists{appendix1.tex}{\input{appendix1}}{}
+\IfFileExists{appendix2.tex}{\input{appendix2}}{}
+% Appendix H, the use of AI assistance, is the last appendix.
+\IfFileExists{appendix_ai.tex}{\input{appendix_ai}}{}
+
+\newpage
+\IfFileExists{checklist.tex}{\input{checklist}}{}
+
+\end{document}
